@@ -1,5 +1,5 @@
 import { model, Schema } from 'mongoose';
-import { COLLECTIONS } from '../constants/collections';
+import { COLLECTIONS } from '../constants/collections.js';
 
 const articleSchema = new Schema(
   {
@@ -7,7 +7,11 @@ const articleSchema = new Schema(
       type: String,
       required: true,
     },
-    category: { type: String, required: true, ref: COLLECTIONS.CATEGORY },
+    category: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: COLLECTIONS.CATEGORY,
+    },
     title: { type: String, required: true, trim: true },
     article: { type: String, required: true, trim: true },
     rate: { type: Number, default: 0 },

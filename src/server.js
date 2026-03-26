@@ -1,32 +1,39 @@
-import { Story } from './models/story.js';
 import express from 'express';
+import cors from 'cors';
+import 'dotenv/config';
+import { errors } from 'celebrate';
 import { connectMongoDB } from './db/connectMongoDB.js';
+import { logger } from './middleware/logger.js';
+import { notFoundHandler } from './middleware/notFoundHandler.js';
+import { errorHandler } from './middleware/errorHandler.js';
+import storiesRoutes from './routes/storiesRoutes.js';
+import cookieParser from 'cookie-parser';
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT ?? 3000;
 
+app.use(logger);
 app.use(express.json());
+app.use(cors());
+app.use(cookieParser());
 
-// список усіх історій
-app.get('/stories', async (req, res) => {
-  const stories = await Story.find();
-  res.status(200).json(stories);
-});
+//!ROUTES
 
-//історія за ІД;
-app.get('/stories/:storyId', async (req, res) => {
-  const { storyId } = req.params;
-  const story = await Story.findById(storyId);
+app.get(storiesRoutes);
 
-  if (!story) {
-    return res.status(404);
-  }
+//!ERRORS
+app.use(errors());
+app.use(notFoundHandler);
+app.use(errorHandler);
 
-  res.status(200).json(story);
-});
-
+//! MONGODB connection
 await connectMongoDB();
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+//! Server connection
+app
+  .listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  })
+  .on('error', (err) => {
+    console.error('Server error:', err);
+  });

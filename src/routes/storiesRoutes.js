@@ -1,11 +1,14 @@
 import { Router } from 'express';
-import { getStories, getStoryById } from '../controllers/storiesController.js';
+import {
+  getArticleById,
+  getArticles,
+} from '../controllers/articleController.js';
 import { celebrate } from 'celebrate';
 
 const router = Router();
 
-router.get('/stories', celebrate(), getStories);
+router.get('/articles', celebrate(), getArticles);
 
-router.get('/stories/:storyId', celebrate(), getStoryById);
+router.get('/articles/:articleId', celebrate(), getArticleById);
 
 export default router;

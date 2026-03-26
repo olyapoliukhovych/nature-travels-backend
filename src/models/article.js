@@ -1,16 +1,21 @@
 import { model, Schema } from 'mongoose';
+import { COLLECTIONS } from '../constants/collections';
 
-const storySchema = new Schema(
+const articleSchema = new Schema(
   {
     img: {
-      type: String, //!
+      type: String,
       required: true,
     },
-    category: { type: String, required: true, enum: [] },
+    category: { type: String, required: true, ref: COLLECTIONS.CATEGORY },
     title: { type: String, required: true, trim: true },
     article: { type: String, required: true, trim: true },
     rate: { type: Number, default: 0 },
-    ownerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    ownerId: {
+      type: Schema.Types.ObjectId,
+      ref: COLLECTIONS.USER,
+      required: true,
+    },
     date: { type: Date, required: true },
   },
   {
@@ -19,7 +24,7 @@ const storySchema = new Schema(
   },
 );
 
-export const Story = model('Story', storySchema);
+export const Article = model(COLLECTIONS.ARTICLE, articleSchema);
 
 /*
 "_id": {

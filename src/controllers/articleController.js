@@ -7,7 +7,7 @@ export const getArticles = async (req, res) => {
 };
 
 export const getArticleById = async (req, res) => {
-  const { storyId: articleId } = req.params;
+  const { articleId } = req.params;
   const article = await Article.findById(articleId);
 
   if (!article) {

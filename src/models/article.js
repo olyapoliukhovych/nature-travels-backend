@@ -1,5 +1,5 @@
 import { model, Schema } from 'mongoose';
-import { COLLECTIONS } from '../constants/collections';
+import { COLLECTIONS } from '../constants/collections.js';
 
 const articleSchema = new Schema(
   {

@@ -19,7 +19,7 @@ app.use(cookieParser());
 
 //!ROUTES
 
-app.get(storiesRoutes);
+app.use(storiesRoutes);
 
 //!ERRORS
 app.use(errors());

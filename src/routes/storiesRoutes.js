@@ -7,8 +7,8 @@ import { celebrate } from 'celebrate';
 
 const router = Router();
 
-router.get('/articles', celebrate(), getArticles);
+router.get('/articles', getArticles);
 
-router.get('/articles/:articleId', celebrate(), getArticleById);
+router.get('/articles/:articleId', getArticleById);
 
 export default router;

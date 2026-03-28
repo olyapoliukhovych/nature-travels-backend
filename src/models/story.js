@@ -1,7 +1,7 @@
 import { model, Schema } from 'mongoose';
 import { COLLECTIONS } from '../constants/collections.js';
 
-const articleSchema = new Schema(
+const storySchema = new Schema(
   {
     img: {
       type: String,
@@ -28,13 +28,13 @@ const articleSchema = new Schema(
   },
 );
 
-articleSchema.index(
+storySchema.index(
   { title: 'text' },
   {
-    name: 'ArticleTextIndex',
+    name: 'StoryTextIndex',
     weights: { title: 10 },
     default_language: 'none',
   },
 );
 
-export const Article = model(COLLECTIONS.ARTICLE, articleSchema);
+export const Article = model(COLLECTIONS.ARTICLE, storySchema);

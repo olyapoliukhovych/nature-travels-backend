@@ -1,6 +1,5 @@
 import mongoose from 'mongoose';
-import { Article } from '../models/article.js';
-import { Category } from '../models/category.js';
+import { Article } from '../models/story.js';
 
 export const connectMongoDB = async () => {
   try {

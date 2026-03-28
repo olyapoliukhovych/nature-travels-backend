@@ -7,7 +7,7 @@ const objectIdValidator = (value, helpers) => {
   return !isValidObjectId(value) ? helpers.message('Invalid id format') : value;
 };
 
-export const getArticlesSchema = {
+export const getStoriesSchema = {
   [Segments.QUERY]: Joi.object({
     page: Joi.number().integer().min(1).default(1),
     perPage: Joi.number().integer().min(3).max(20).default(10),
@@ -28,7 +28,7 @@ export const getArticlesSchema = {
   }),
 };
 
-export const createArticleSchema = {
+export const createStorySchema = {
   [Segments.BODY]: Joi.object({
     img: Joi.string().required().messages(),
     category: Joi.string().pattern(objectIdPattern).required().messages({
@@ -56,13 +56,13 @@ export const createArticleSchema = {
   }),
 };
 
-export const articleIdParamSchema = {
+export const storyIdParamSchema = {
   [Segments.PARAMS]: Joi.object({
     articleId: Joi.string().custom(objectIdValidator).required(),
   }),
 };
 
-export const updateArticleSchema = {
+export const updateStorySchema = {
   [Segments.PARAMS]: Joi.object({
     articleId: Joi.string().custom(objectIdValidator).required(),
   }),

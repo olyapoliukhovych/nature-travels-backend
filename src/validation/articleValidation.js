@@ -1,0 +1,90 @@
+import { Joi, Segments } from 'celebrate';
+import { isValidObjectId } from 'mongoose';
+
+const objectIdPattern = /^[0-9a-fA-F]{24}$/;
+
+const objectIdValidator = (value, helpers) => {
+  return !isValidObjectId(value) ? helpers.message('Invalid id format') : value;
+};
+
+export const getArticlesSchema = {
+  [Segments.QUERY]: Joi.object({
+    page: Joi.number().integer().min(1).default(1),
+    perPage: Joi.number().integer().min(3).max(20).default(10),
+    category: Joi.string()
+      .pattern(objectIdPattern)
+      .messages({ 'string.pattern.base': 'Category must be a valid ObjectId' }),
+    title: Joi.string().min(3).messages({
+      'string.min': 'Title should have at least {#limit} characters',
+    }),
+    rate: Joi.number().min(0).max(100),
+
+    sortBy: Joi.string()
+      .valid('_id', 'title', 'category', 'rate', 'date', 'createdAt')
+      .default('_id'),
+    sortOrder: Joi.string().valid('asc', 'desc').default('asc'),
+
+    search: Joi.string().trim().allow(''),
+  }),
+};
+
+export const createArticleSchema = {
+  [Segments.BODY]: Joi.object({
+    img: Joi.string().required().messages(),
+    category: Joi.string().pattern(objectIdPattern).required().messages({
+      'string.base': 'Category must be a string',
+      'any.required': 'Category is required',
+    }),
+    title: Joi.string().min(3).required().messages({
+      'string.base': 'Title must be a string',
+      'string.min': 'Title should have at least {#limit} characters',
+      'any.required': 'Title is required',
+    }),
+    article: Joi.string().min(3).required().messages({
+      'string.base': 'Article must be a string',
+      'string.min': 'Article should have at least {#limit} characters',
+      'any.required': 'Article is required',
+    }),
+    rate: Joi.number().default(0).messages({
+      'number.base': 'Rate must be a number',
+    }),
+    ownerId: Joi.string().pattern(objectIdPattern).required(),
+    date: Joi.date().required().messages({
+      'string.base': 'Date must be a date',
+      'any.required': 'Date is required',
+    }),
+  }),
+};
+
+export const articleIdParamSchema = {
+  [Segments.PARAMS]: Joi.object({
+    articleId: Joi.string().custom(objectIdValidator).required(),
+  }),
+};
+
+export const updateArticleSchema = {
+  [Segments.PARAMS]: Joi.object({
+    articleId: Joi.string().custom(objectIdValidator).required(),
+  }),
+  [Segments.BODY]: Joi.object({
+    img: Joi.string().messages(),
+    category: Joi.string().pattern(objectIdPattern).messages({
+      'string.base': 'Category must be a string',
+    }),
+    title: Joi.string().min(3).messages({
+      'string.base': 'Title must be a string',
+      'string.min': 'Title should have at least {#limit} characters',
+    }),
+    article: Joi.string().min(3).messages({
+      'string.base': 'Article must be a string',
+      'string.min': 'Article should have at least {#limit} characters',
+    }),
+    rate: Joi.number().messages({
+      'number.base': 'Rate must be a number',
+    }),
+    ownerId: Joi.string().pattern(objectIdPattern),
+    date: Joi.date().messages({
+      'string.base': 'Date must be a date',
+    }),
+  }).min(1),
+};

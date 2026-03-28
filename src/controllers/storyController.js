@@ -1,6 +1,7 @@
 import createHttpError from 'http-errors';
 import { Article } from '../models/story.js';
 import { Category } from '../models/category.js';
+import { User } from '../models/user.js';
 
 export const getStories = async (req, res) => {
   const {
@@ -49,6 +50,55 @@ export const getStories = async (req, res) => {
     perPage,
     totalItems,
     totalPages,
+    stories,
+  });
+};
+
+export const saveStory = async (req, res) => {
+  const { storyId } = req.params;
+
+  await Promise.all([
+    User.findByIdAndUpdate(req.user._id, {
+      $addToSet: { savedArticles: storyId },
+    }),
+    Article.findByIdAndUpdate(storyId, { $inc: { savedCount: 1 } }),
+  ]);
+
+  res.status(200).json({ message: 'Story saved' });
+};
+
+export const unsaveStory = async (req, res) => {
+  const { storyId } = req.params;
+
+  await Promise.all([
+    User.findByIdAndUpdate(req.user._id, { $pull: { savedArticles: storyId } }),
+    Article.findByIdAndUpdate(storyId, { $inc: { savedCount: -1 } }),
+  ]);
+
+  res.status(200).json({ message: 'Story unsaved' });
+};
+
+export const getRecommended = async (req, res) => {
+  const { page = 1, perPage = 10, category } = req.query;
+  if (!category) throw createHttpError(400, 'Category is required');
+
+  const skip = (page - 1) * perPage;
+  const filter = { category };
+
+  const [totalItems, stories] = await Promise.all([
+    Article.countDocuments(filter),
+    Article.find(filter)
+      .populate('category')
+      .sort({ savedCount: -1 }) // ← просто сортуємо по полю
+      .skip(skip)
+      .limit(perPage),
+  ]);
+
+  res.status(200).json({
+    page,
+    perPage,
+    totalItems,
+    totalPages: Math.ceil(totalItems / perPage),
     stories,
   });
 };

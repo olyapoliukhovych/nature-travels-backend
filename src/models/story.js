@@ -21,7 +21,9 @@ const storySchema = new Schema(
       required: true,
     },
     date: { type: Date, required: true },
+    savedCount: { type: Number, default: 0 },
   },
+
   {
     versionKey: false,
     timestamps: true,

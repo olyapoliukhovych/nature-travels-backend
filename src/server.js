@@ -2,12 +2,13 @@ import express from 'express';
 import cors from 'cors';
 import 'dotenv/config';
 import { errors } from 'celebrate';
+import cookieParser from 'cookie-parser';
 import { connectMongoDB } from './db/connectMongoDB.js';
 import { logger } from './middleware/logger.js';
 import { notFoundHandler } from './middleware/notFoundHandler.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import storiesRoutes from './routes/storiesRoutes.js';
-import cookieParser from 'cookie-parser';
+import usersRoutes from './routes/usersRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -20,6 +21,7 @@ app.use(cookieParser());
 //!ROUTES
 
 app.use(storiesRoutes);
+app.use(usersRoutes);
 
 //!ERRORS
 app.use(errors());

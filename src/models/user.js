@@ -11,10 +11,11 @@ const userSchema = new Schema(
   { versionKey: false },
 );
 
-userSchema.pre('save', function () {
+userSchema.pre('save', function (next) {
   if (!this.username) {
     this.username = this.email;
   }
+  next();
 });
 
 export const User = model(COLLECTIONS.USER, userSchema);

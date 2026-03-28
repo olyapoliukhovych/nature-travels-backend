@@ -8,6 +8,7 @@ import { notFoundHandler } from './middleware/notFoundHandler.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import storiesRoutes from './routes/storiesRoutes.js';
 import cookieParser from 'cookie-parser';
+import authRouter from './routes/authRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -18,6 +19,7 @@ app.use(cors());
 app.use(cookieParser());
 
 //!ROUTES
+app.use('/auth', authRouter);
 
 app.use(storiesRoutes);
 

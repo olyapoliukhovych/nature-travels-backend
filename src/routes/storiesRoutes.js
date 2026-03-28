@@ -1,41 +1,25 @@
 import { Router } from 'express';
 import {
-  createArticle,
-  deleteArticle,
-  getArticleById,
-  getArticles,
-  updateArticle,
-} from '../controllers/articleController.js';
+  createStory,
+  deleteStory,
+  getStoryById,
+  getStories,
+  updateStory,
+} from '../controllers/storyController.js';
 import { celebrate } from 'celebrate';
 import {
-  articleIdParamSchema,
-  createArticleSchema,
-  getArticlesSchema,
-  updateArticleSchema,
-} from '../validation/articleValidation.js';
+  storyIdParamSchema,
+  createStorySchema,
+  getStoriesSchema,
+  updateStorySchema,
+} from '../validation/storyValidation.js';
 
 const router = Router();
 
-router.get('/articles', celebrate(getArticlesSchema), getArticles);
-
-router.get(
-  '/articles/:articleId',
-  celebrate(articleIdParamSchema),
-  getArticleById,
-);
-
-router.post('/articles', celebrate(createArticleSchema), createArticle);
-
-router.patch(
-  '/articles/:articleId',
-  celebrate(updateArticleSchema),
-  updateArticle,
-);
-
-router.delete(
-  '/articles/:articleId',
-  celebrate(articleIdParamSchema),
-  deleteArticle,
-);
+router.get('/stories', celebrate(getStoriesSchema), getStories);
+router.get('/stories/:storyId', celebrate(storyIdParamSchema), getStoryById);
+router.post('/stories', celebrate(createStorySchema), createStory);
+router.patch('/stories/:storyId', celebrate(updateStorySchema), updateStory);
+router.delete('/stories/:storyId', celebrate(storyIdParamSchema), deleteStory);
 
 export default router;

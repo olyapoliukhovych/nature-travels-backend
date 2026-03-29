@@ -1,8 +1,9 @@
 import crypto from 'node:crypto';
 import { Session } from '../models/session.js';
-
-const ACCESS_TOKEN_LIFETIME = 15 * 60 * 1000;
-const REFRESH_TOKEN_LIFETIME = 30 * 24 * 60 * 60 * 1000;
+import {
+  ACCESS_TOKEN_LIFETIME,
+  REFRESH_TOKEN_LIFETIME,
+} from '../constants/time.js';
 
 export const createSession = async (userId) => {
   await Session.deleteOne({ userId });
@@ -17,16 +18,24 @@ export const createSession = async (userId) => {
 };
 
 export const setSessionCookies = (res, session) => {
-  res.cookie('accessToken', session.accessToken, {
+  const commonOptions = {
     httpOnly: true,
+    secure: true,
+    sameSite: 'none',
+  };
+
+  res.cookie('accessToken', session.accessToken, {
+    ...commonOptions,
     expires: session.accessTokenValidUntil,
   });
+
   res.cookie('refreshToken', session.refreshToken, {
-    httpOnly: true,
+    ...commonOptions,
     expires: session.refreshTokenValidUntil,
   });
+
   res.cookie('sessionId', session._id, {
-    httpOnly: true,
+    ...commonOptions,
     expires: session.refreshTokenValidUntil,
   });
 };

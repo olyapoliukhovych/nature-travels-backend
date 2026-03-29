@@ -3,7 +3,7 @@ import { COLLECTIONS } from '../constants/collections.js';
 
 const categorySchema = new Schema(
   {
-    name: {
+    category: {
       type: String,
       required: true,
       trim: true,

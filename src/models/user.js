@@ -3,7 +3,7 @@ import { COLLECTIONS } from '../constants/collections.js';
 
 const userSchema = new Schema(
   {
-    username: { type: String, trim: true },
+    name: { type: String, trim: true },
     email: { type: String, unique: true, required: true, trim: true },
     password: { type: String, required: true },
   },

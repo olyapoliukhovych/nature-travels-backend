@@ -1,11 +1,10 @@
 import { Schema, model } from 'mongoose';
-import { COLLECTIONS } from '../constants/collections.js';
 
 const sessionSchema = new Schema(
   {
     userId: {
       type: Schema.Types.ObjectId,
-      ref: COLLECTIONS.USER,
+      ref: 'User',
       required: true,
     },
     accessToken: { type: String, required: true },
@@ -16,4 +15,4 @@ const sessionSchema = new Schema(
   { timestamps: true, versionKey: false },
 );
 
-export const Session = model(COLLECTIONS.SESSION, sessionSchema);
+export const Session = model('Session', sessionSchema);

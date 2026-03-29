@@ -39,4 +39,4 @@ storySchema.index(
   },
 );
 
-export const Article = model(COLLECTIONS.ARTICLE, storySchema);
+export const Story = model(COLLECTIONS.ARTICLE, storySchema);

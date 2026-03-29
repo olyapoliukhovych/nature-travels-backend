@@ -1,5 +1,5 @@
 import createHttpError from 'http-errors';
-import { Article } from '../models/story.js';
+import { Story } from '../models/story.js';
 import { Category } from '../models/category.js';
 import { User } from '../models/user.js';
 
@@ -17,7 +17,7 @@ export const getStories = async (req, res) => {
 
   const skip = (page - 1) * perPage;
 
-  const storiesQuery = Article.find();
+  const storiesQuery = Story.find();
 
   if (search) {
     storiesQuery.where({ $text: { $search: search } });
@@ -59,9 +59,9 @@ export const saveStory = async (req, res) => {
 
   await Promise.all([
     User.findByIdAndUpdate(req.user._id, {
-      $addToSet: { savedArticles: storyId },
+      $addToSet: { savedStories: storyId },
     }),
-    Article.findByIdAndUpdate(storyId, { $inc: { savedCount: 1 } }),
+    Story.findByIdAndUpdate(storyId, { $inc: { savedCount: 1 } }),
   ]);
 
   res.status(200).json({ message: 'Story saved' });
@@ -71,8 +71,8 @@ export const unsaveStory = async (req, res) => {
   const { storyId } = req.params;
 
   await Promise.all([
-    User.findByIdAndUpdate(req.user._id, { $pull: { savedArticles: storyId } }),
-    Article.findByIdAndUpdate(storyId, { $inc: { savedCount: -1 } }),
+    User.findByIdAndUpdate(req.user._id, { $pull: { savedStories: storyId } }),
+    Story.findByIdAndUpdate(storyId, { $inc: { savedCount: -1 } }),
   ]);
 
   res.status(200).json({ message: 'Story unsaved' });
@@ -86,8 +86,8 @@ export const getRecommended = async (req, res) => {
   const filter = { category };
 
   const [totalItems, stories] = await Promise.all([
-    Article.countDocuments(filter),
-    Article.find(filter)
+    Story.countDocuments(filter),
+    Story.find(filter)
       .populate('category')
       .sort({ savedCount: -1 }) // ← просто сортуємо по полю
       .skip(skip)
@@ -105,7 +105,7 @@ export const getRecommended = async (req, res) => {
 
 export const getStoryById = async (req, res) => {
   const { storyId } = req.params;
-  const story = await Article.findById(storyId).populate('category');
+  const story = await Story.findById(storyId).populate('category');
 
   if (!story) {
     throw createHttpError(404, 'Story not found');
@@ -122,13 +122,13 @@ export const createStory = async (req, res) => {
     throw createHttpError(400, 'Category not found');
   }
 
-  const story = await Article.create(req.body);
+  const story = await Story.create(req.body);
   res.status(201).json(story);
 };
 
 export const deleteStory = async (req, res) => {
   const { storyId } = req.params;
-  const story = await Article.findOneAndDelete({ _id: storyId });
+  const story = await Story.findOneAndDelete({ _id: storyId });
 
   if (!story) {
     throw createHttpError(404, 'Story not found');
@@ -140,7 +140,7 @@ export const deleteStory = async (req, res) => {
 export const updateStory = async (req, res) => {
   const { storyId } = req.params;
 
-  const story = await Article.findOneAndUpdate({ _id: storyId }, req.body, {
+  const story = await Story.findOneAndUpdate({ _id: storyId }, req.body, {
     returnDocument: 'after',
   });
 

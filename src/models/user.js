@@ -8,7 +8,7 @@ const userSchema = new Schema(
     email: { type: String, unique: true, required: true, trim: true },
     password: { type: String, required: true },
     articlesAmount: { type: Number, default: 0 },
-    savedArticles: [{ type: Schema.Types.ObjectId, ref: COLLECTIONS.ARTICLE }],
+    savedStories: [{ type: Schema.Types.ObjectId, ref: COLLECTIONS.ARTICLE }],
   },
   { timestamps: true, versionKey: false },
 );

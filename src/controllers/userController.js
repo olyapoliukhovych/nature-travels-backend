@@ -4,6 +4,7 @@ import { User } from '../models/user.js';
 import { EmailVerification } from '../models/emailVerification.js';
 import { saveFileToCloudinary } from '../utils/saveFileToCloudinary.js';
 import { sendMail } from '../utils/sendMail.js';
+import { ONE_DAY } from '../constants/time.js';
 
 export const updateUserAvatar = async (req, res) => {
   if (!req.file) throw createHttpError(400, 'No file');
@@ -25,9 +26,9 @@ export const updateUser = async (req, res) => {
   const user = await User.findById(req.user._id);
   if (!user) throw createHttpError(404, 'User not found');
 
-  if (email && email !== user.email) {
-    if (!email.includes('@')) throw createHttpError(400, 'Invalid email');
+  if (name) user.name = name;
 
+  if (email && email !== user.email) {
     const existingUser = await User.findOne({ email });
     if (existingUser) throw createHttpError(409, 'Email already in use');
 
@@ -38,8 +39,10 @@ export const updateUser = async (req, res) => {
       userId: user._id,
       newEmail: email,
       token,
-      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      expiresAt: new Date(Date.now() + ONE_DAY),
     });
+
+    await user.save();
 
     const verifyLink = `${process.env.FRONTEND_DOMAIN}/verify?token=${token}`;
 
@@ -52,12 +55,14 @@ export const updateUser = async (req, res) => {
     return res.json({ message: 'Verification email sent' });
   }
 
-  if (name) user.name = name;
-
   await user.save();
 
-  const { password, ...safeUser } = user.toObject();
-  res.json({ user: safeUser });
+  const safeUser = user.toObject();
+  delete safeUser.password;
+
+  res
+    .status(200)
+    .json({ user: safeUser, message: 'User updated successfully' });
 };
 
 export const verifyUserEmail = async (req, res) => {
@@ -77,5 +82,5 @@ export const verifyUserEmail = async (req, res) => {
 
   await verification.deleteOne();
 
-  res.json({ message: 'Email verified' });
+  res.status(200).json({ message: 'Email verified successfully' });
 };

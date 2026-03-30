@@ -6,6 +6,7 @@ import {
   verifyUserEmail,
 } from '../controllers/userController.js';
 import { upload } from '../middleware/multer.js';
+import { updateUserSchema } from '../validation/updateUserValidation.js';
 
 const router = Router();
 
@@ -16,7 +17,7 @@ router.patch(
   updateUserAvatar,
 );
 
-router.patch('/users/me', authenticate, updateUser);
+router.patch('/users/me', authenticate, updateUserSchema, updateUser);
 
 router.get('/users/verify/:token', verifyUserEmail);
 

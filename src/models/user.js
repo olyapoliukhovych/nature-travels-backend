@@ -3,8 +3,7 @@ import { COLLECTIONS } from '../constants/collections.js';
 
 const userSchema = new Schema(
   {
-    username: { type: String, trim: true },
-    avatarUrl: { type: String },
+    name: { type: String, trim: true },
     email: { type: String, unique: true, required: true, trim: true },
     password: { type: String, required: true },
     articlesAmount: { type: Number, default: 0 },
@@ -13,10 +12,11 @@ const userSchema = new Schema(
   { timestamps: true, versionKey: false },
 );
 
-userSchema.pre('save', function () {
+userSchema.pre('save', function (next) {
   if (!this.username) {
     this.username = this.email;
   }
+  next();
 });
 
 export const User = model(COLLECTIONS.USER, userSchema);

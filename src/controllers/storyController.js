@@ -43,6 +43,19 @@ export const getStories = async (req, res) => {
     storiesQuery.skip(skip).limit(perPage), // прибрав зайвий await
   ]);
 
+  const stories = await Promise.all(
+    rawStories.map(async (story) => {
+      const favoritesCount = await User.countDocuments({
+        savedArticles: story._id,
+      });
+
+      return {
+        ...story,
+        favoritesCount,
+      };
+    }),
+  );
+
   const totalPages = Math.ceil(totalItems / perPage);
 
   res.status(200).json({

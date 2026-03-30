@@ -9,6 +9,8 @@ import { notFoundHandler } from './middleware/notFoundHandler.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import storiesRoutes from './routes/storiesRoutes.js';
 import usersRoutes from './routes/usersRoutes.js';
+import categoriesRoutes from './routes/categoriesRoutes.js';
+import authRouter from './routes/authRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -23,7 +25,7 @@ app.use('/auth', authRouter);
 
 app.use(storiesRoutes);
 app.use(usersRoutes);
-app.use(categoriesRouter);
+app.use(categoriesRoutes);
 
 //!ERRORS
 app.use(errors());

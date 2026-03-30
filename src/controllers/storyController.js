@@ -19,50 +19,42 @@ export const getStories = async (req, res) => {
 
   const storiesQuery = Story.find();
 
-  if (search) {
-    storiesQuery.where({ $text: { $search: search } });
-  }
-
-  if (category) {
-    storiesQuery.where('category').equals(category);
-  }
-
-  if (title) {
-    storiesQuery.where('title').regex(new RegExp(title, 'i'));
-  }
-
-  if (rate) {
-    storiesQuery.where('rate').equals(Number(rate));
-  }
+  if (search) storiesQuery.where({ $text: { $search: search } });
+  if (category) storiesQuery.where('category').equals(category);
+  if (title) storiesQuery.where('title').regex(new RegExp(title, 'i'));
+  if (rate) storiesQuery.where('rate').equals(Number(rate));
 
   storiesQuery.populate('category');
   storiesQuery.sort({ [sortBy]: sortOrder === 'asc' ? 1 : -1 });
 
-  const [totalItems, stories] = await Promise.all([
+  const [totalItems, rawStories] = await Promise.all([
     storiesQuery.clone().countDocuments(),
-    storiesQuery.skip(skip).limit(perPage), // прибрав зайвий await
+    storiesQuery.skip(skip).limit(perPage),
   ]);
 
-  const stories = await Promise.all(
-    rawStories.map(async (story) => {
-      const favoritesCount = await User.countDocuments({
-        savedArticles: story._id,
-      });
+  const storyIds = rawStories.map((s) => s._id);
 
-      return {
-        ...story,
-        favoritesCount,
-      };
-    }),
-  );
+  const favoriteCounts = await User.aggregate([
+    { $unwind: '$savedStories' },
+    { $match: { savedStories: { $in: storyIds } } },
+    { $group: { _id: '$savedStories', count: { $sum: 1 } } },
+  ]);
 
-  const totalPages = Math.ceil(totalItems / perPage);
+  const favoriteMap = {};
+  favoriteCounts.forEach(({ _id, count }) => {
+    favoriteMap[_id.toString()] = count;
+  });
+
+  const stories = rawStories.map((story) => ({
+    ...story.toObject(),
+    favoritesCount: favoriteMap[story._id.toString()] || 0,
+  }));
 
   res.status(200).json({
     page,
     perPage,
     totalItems,
-    totalPages,
+    totalPages: Math.ceil(totalItems / perPage),
     stories,
   });
 };

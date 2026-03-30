@@ -1,58 +1,7 @@
 import createHttpError from 'http-errors';
-import { Article } from '../models/story.js';
+import { Story } from '../models/story.js';
 import { Category } from '../models/category.js';
 import { User } from '../models/user.js';
-
-// export const getStories = async (req, res) => {
-//   const {
-//     page = 1,
-//     perPage = 10,
-//     category,
-//     title,
-//     rate,
-//     sortBy = '_id',
-//     sortOrder = 'desc',
-//     search,
-//   } = req.query;
-
-//   const skip = (page - 1) * perPage;
-
-//   const storiesQuery = Article.find();
-
-//   if (search) {
-//     storiesQuery.where({ $text: { $search: search } });
-//   }
-
-//   if (category) {
-//     storiesQuery.where('category').equals(category);
-//   }
-
-//   if (title) {
-//     storiesQuery.where('title').regex(new RegExp(title, 'i'));
-//   }
-
-//   if (rate) {
-//     storiesQuery.where('rate').equals(Number(rate));
-//   }
-
-//   storiesQuery.populate('category', 'name');
-//   storiesQuery.sort({ [sortBy]: sortOrder === 'asc' ? 1 : -1 });
-
-//   const [totalItems, stories] = await Promise.all([
-//     storiesQuery.clone().countDocuments(),
-//     storiesQuery.skip(skip).limit(perPage), // прибрав зайвий await
-//   ]);
-
-//   const totalPages = Math.ceil(totalItems / perPage);
-
-//   res.status(200).json({
-//     page,
-//     perPage,
-//     totalItems,
-//     totalPages,
-//     stories,
-//   });
-// };
 
 export const getStories = async (req, res) => {
   const {
@@ -68,21 +17,30 @@ export const getStories = async (req, res) => {
 
   const skip = (page - 1) * perPage;
 
-  const filter = {};
-  if (search) filter.$text = { $search: search };
-  if (category) filter.category = category;
-  if (title) filter.title = { $regex: title, $options: 'i' };
-  if (rate) filter.rate = Number(rate);
+  const storiesQuery = Story.find();
 
-  const [totalItems, rawStories] = await Promise.all([
-    Article.countDocuments(filter),
-    Article.find(filter)
-      .populate('category')
-      .populate('ownerId', 'name')
-      .sort({ [sortBy]: sortOrder === 'asc' ? 1 : -1 })
-      .skip(skip)
-      .limit(perPage)
-      .lean(),
+  if (search) {
+    storiesQuery.where({ $text: { $search: search } });
+  }
+
+  if (category) {
+    storiesQuery.where('category').equals(category);
+  }
+
+  if (title) {
+    storiesQuery.where('title').regex(new RegExp(title, 'i'));
+  }
+
+  if (rate) {
+    storiesQuery.where('rate').equals(Number(rate));
+  }
+
+  storiesQuery.populate('category');
+  storiesQuery.sort({ [sortBy]: sortOrder === 'asc' ? 1 : -1 });
+
+  const [totalItems, stories] = await Promise.all([
+    storiesQuery.clone().countDocuments(),
+    storiesQuery.skip(skip).limit(perPage), // прибрав зайвий await
   ]);
 
   const stories = await Promise.all(
@@ -109,9 +67,58 @@ export const getStories = async (req, res) => {
   });
 };
 
+export const saveStory = async (req, res) => {
+  const { storyId } = req.params;
+
+  await Promise.all([
+    User.findByIdAndUpdate(req.user._id, {
+      $addToSet: { savedStories: storyId },
+    }),
+    Story.findByIdAndUpdate(storyId, { $inc: { savedCount: 1 } }),
+  ]);
+
+  res.status(200).json({ message: 'Story saved' });
+};
+
+export const unsaveStory = async (req, res) => {
+  const { storyId } = req.params;
+
+  await Promise.all([
+    User.findByIdAndUpdate(req.user._id, { $pull: { savedStories: storyId } }),
+    Story.findByIdAndUpdate(storyId, { $inc: { savedCount: -1 } }),
+  ]);
+
+  res.status(200).json({ message: 'Story unsaved' });
+};
+
+export const getRecommended = async (req, res) => {
+  const { page = 1, perPage = 10, category } = req.query;
+  if (!category) throw createHttpError(400, 'Category is required');
+
+  const skip = (page - 1) * perPage;
+  const filter = { category };
+
+  const [totalItems, stories] = await Promise.all([
+    Story.countDocuments(filter),
+    Story.find(filter)
+      .populate('category')
+      .sort({ savedCount: -1 }) // ← просто сортуємо по полю
+      .skip(skip)
+      .limit(perPage),
+  ]);
+
+  res.status(200).json({
+    page,
+    perPage,
+    totalItems,
+    totalPages: Math.ceil(totalItems / perPage),
+    stories,
+  });
+};
+
 export const getStoryById = async (req, res) => {
   const { storyId } = req.params;
-  const story = await Article.findById(storyId).populate('category');
+  const story = await Story.findById(storyId).populate('category');
 
   if (!story) {
     throw createHttpError(404, 'Story not found');
@@ -128,13 +135,13 @@ export const createStory = async (req, res) => {
     throw createHttpError(400, 'Category not found');
   }
 
-  const story = await Article.create(req.body);
+  const story = await Story.create(req.body);
   res.status(201).json(story);
 };
 
 export const deleteStory = async (req, res) => {
   const { storyId } = req.params;
-  const story = await Article.findOneAndDelete({ _id: storyId });
+  const story = await Story.findOneAndDelete({ _id: storyId });
 
   if (!story) {
     throw createHttpError(404, 'Story not found');
@@ -146,7 +153,7 @@ export const deleteStory = async (req, res) => {
 export const updateStory = async (req, res) => {
   const { storyId } = req.params;
 
-  const story = await Article.findOneAndUpdate({ _id: storyId }, req.body, {
+  const story = await Story.findOneAndUpdate({ _id: storyId }, req.body, {
     returnDocument: 'after',
   });
 

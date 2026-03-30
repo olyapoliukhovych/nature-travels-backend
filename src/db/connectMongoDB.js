@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { Article } from '../models/story.js';
+import { Story } from '../models/story.js';
 
 export const connectMongoDB = async () => {
   try {
@@ -7,7 +7,7 @@ export const connectMongoDB = async () => {
     await mongoose.connect(mongoUrl);
     console.log('✅ MongoDB connection established successfully');
 
-    await Article.syncIndexes();
+    await Story.syncIndexes();
     console.log('Indexes synced successfully');
   } catch (error) {
     console.error('❌ Failed to connect to MongoDB:', error.message);

@@ -4,7 +4,7 @@ import { User } from '../models/user.js';
 import { EmailVerification } from '../models/emailVerification.js';
 import { saveFileToCloudinary } from '../utils/saveFileToCloudinary.js';
 import { sendMail } from '../utils/sendMail.js';
-import { ONE_DAY } from '../constants/time.js';
+import { REFRESH_TOKEN_LIFETIME } from '../constants/time.js';
 
 export const updateUserAvatar = async (req, res) => {
   if (!req.file) throw createHttpError(400, 'No file');
@@ -39,7 +39,7 @@ export const updateUser = async (req, res) => {
       userId: user._id,
       newEmail: email,
       token,
-      expiresAt: new Date(Date.now() + ONE_DAY),
+      expiresAt: new Date(Date.now() + REFRESH_TOKEN_LIFETIME),
     });
 
     await user.save();

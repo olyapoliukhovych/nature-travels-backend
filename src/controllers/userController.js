@@ -7,6 +7,12 @@ import { sendMail } from '../utils/sendMail.js';
 import { REFRESH_TOKEN_LIFETIME } from '../constants/time.js';
 import { Story } from '../models/story.js';
 
+export const getAllUsers = async (req, res) => {
+  const users = await User.find();
+
+  res.status(200).json(users);
+};
+
 export const updateUserAvatar = async (req, res) => {
   if (!req.file) throw createHttpError(400, 'No file');
 
@@ -90,7 +96,11 @@ export const getUserById = async (req, res) => {
   const { userId } = req.params;
   const { page = 1, perPage = 10 } = req.query;
 
-  const user = await User.findById(userId);
+  const user = await User.findById(userId).populate({
+    path: 'savedStories',
+    populate: { path: 'category' },
+  });
+
   if (!user) throw createHttpError(404, 'User not found');
 
   const skip = (page - 1) * perPage;
@@ -102,6 +112,8 @@ export const getUserById = async (req, res) => {
       .skip(skip)
       .limit(perPage),
   ]);
+  console.log(user);
+  console.log(user.toObject());
 
   res.status(200).json({
     user,
@@ -116,7 +128,7 @@ export const getUserById = async (req, res) => {
 };
 
 export const getCurrentUser = async (req, res) => {
-  const user = await User.findById(req.user._id);
+  const user = await User.findById(req.user._id).populate('savedStories');
   if (!user) throw createHttpError(404, 'User not found');
   res.status(200).json(user);
 };

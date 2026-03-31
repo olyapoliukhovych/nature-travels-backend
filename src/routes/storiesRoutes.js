@@ -5,7 +5,6 @@ import {
   getStoryById,
   getStories,
   updateStory,
-  getRecommended,
 } from '../controllers/storyController.js';
 import { celebrate } from 'celebrate';
 import {
@@ -17,11 +16,11 @@ import {
 
 const router = Router();
 
-router.get('/stories', celebrate(getStoriesSchema), getStories);
-router.get('/stories/recommended', getRecommended);
-router.get('/stories/:storyId', celebrate(storyIdParamSchema), getStoryById);
-router.post('/stories', celebrate(createStorySchema), createStory);
-router.patch('/stories/:storyId', celebrate(updateStorySchema), updateStory);
-router.delete('/stories/:storyId', celebrate(storyIdParamSchema), deleteStory);
+router.get('/', celebrate(getStoriesSchema), getStories);
+// router.get('/populare', getPopulareStories);
+router.get('/:storyId', celebrate(storyIdParamSchema), getStoryById);
+router.post('/', celebrate(createStorySchema), createStory);
+router.patch('/:storyId', celebrate(updateStorySchema), updateStory);
+router.delete('/:storyId', celebrate(storyIdParamSchema), deleteStory);
 
 export default router;

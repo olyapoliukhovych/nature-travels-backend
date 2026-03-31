@@ -29,8 +29,8 @@ app.use(cookieParser());
 //!ROUTES
 app.use('/auth', authRouter);
 
-app.use(storiesRoutes);
-app.use(usersRoutes);
+app.use('/stories', storiesRoutes);
+app.use('/users', usersRoutes);
 app.use(categoriesRoutes);
 
 //!ERRORS

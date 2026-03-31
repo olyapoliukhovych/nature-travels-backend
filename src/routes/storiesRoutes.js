@@ -5,6 +5,9 @@ import {
   getStoryById,
   getStories,
   updateStory,
+  getMyStories,
+  getSavedStories,
+  toggleSaveStory,
 } from '../controllers/storyController.js';
 import { celebrate } from 'celebrate';
 import {
@@ -13,14 +16,36 @@ import {
   getStoriesSchema,
   updateStorySchema,
 } from '../validation/storyValidation.js';
+import { authenticate } from '../middleware/authenticate.js';
 
 const router = Router();
-
 router.get('/', celebrate(getStoriesSchema), getStories);
-// router.get('/populare', getPopulareStories);
-router.get('/:storyId', celebrate(storyIdParamSchema), getStoryById);
-router.post('/', celebrate(createStorySchema), createStory);
-router.patch('/:storyId', celebrate(updateStorySchema), updateStory);
-router.delete('/:storyId', celebrate(storyIdParamSchema), deleteStory);
 
+router.get('/my', authenticate, getMyStories);
+router.get('/saved', authenticate, getSavedStories);
+
+router.patch(
+  '/:storyId/save',
+  authenticate,
+  celebrate(storyIdParamSchema),
+  toggleSaveStory,
+);
+
+router.get('/:storyId', celebrate(storyIdParamSchema), getStoryById);
+
+router.post('/', authenticate, celebrate(createStorySchema), createStory);
+
+router.patch(
+  '/:storyId',
+  authenticate,
+  celebrate(updateStorySchema),
+  updateStory,
+);
+
+router.delete(
+  '/:storyId',
+  authenticate,
+  celebrate(storyIdParamSchema),
+  deleteStory,
+);
 export default router;

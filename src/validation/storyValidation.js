@@ -28,7 +28,7 @@ export const getStoriesSchema = {
 
 export const createStorySchema = {
   [Segments.BODY]: Joi.object({
-    img: Joi.string().required().messages(),
+    img: Joi.string().required().messages('Please add img ref'),
     category: Joi.string().custom(objectIdValidator).required().messages({
       'string.base': 'Category must be a string',
       'any.required': 'Category is required',
@@ -65,7 +65,7 @@ export const updateStorySchema = {
     storyId: Joi.string().custom(objectIdValidator).required(),
   }),
   [Segments.BODY]: Joi.object({
-    img: Joi.string().messages(),
+    img: Joi.string().messages('Please add img ref'),
     category: Joi.string().custom(objectIdValidator).messages({
       'string.base': 'Category must be a string',
     }),

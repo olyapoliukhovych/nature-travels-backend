@@ -1,2 +1,3 @@
 export const ACCESS_TOKEN_LIFETIME = 15 * 60 * 1000;
 export const REFRESH_TOKEN_LIFETIME = 24 * 60 * 60 * 1000;
+export const EMAIL_VERIFICATION_LIFETIME = 60 * 60 * 1000;

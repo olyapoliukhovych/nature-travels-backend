@@ -12,10 +12,13 @@ import { upload } from '../middleware/multer.js';
 import { updateUserSchema } from '../validation/updateUserValidation.js';
 
 const router = Router();
+
+// whole list
 router.get('/', getAllUsers);
 
+// current user (static data first)
 router.get('/me', authenticate, getCurrentUser);
-
+router.patch('/me', authenticate, updateUserSchema, updateUser);
 router.patch(
   '/me/avatar',
   authenticate,
@@ -23,10 +26,10 @@ router.patch(
   updateUserAvatar,
 );
 
-router.patch('/me', authenticate, updateUserSchema, updateUser);
-
+// verification
 router.get('/verify/:token', verifyUserEmail);
 
+// public profile of another user
 router.get('/:userId', getUserById);
 
 export default router;

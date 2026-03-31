@@ -19,11 +19,13 @@ import {
 import { authenticate } from '../middleware/authenticate.js';
 
 const router = Router();
+
+// general lists
+router.get('/created', authenticate, getMyStories);
+router.get('/saved', authenticate, getSavedStories);
 router.get('/', celebrate(getStoriesSchema), getStories);
 
-router.get('/my', authenticate, getMyStories);
-router.get('/saved', authenticate, getSavedStories);
-
+// toggle save story
 router.patch(
   '/:storyId/save',
   authenticate,
@@ -31,21 +33,20 @@ router.patch(
   toggleSaveStory,
 );
 
+// actions with specific story
 router.get('/:storyId', celebrate(storyIdParamSchema), getStoryById);
-
 router.post('/', authenticate, celebrate(createStorySchema), createStory);
-
 router.patch(
   '/:storyId',
   authenticate,
   celebrate(updateStorySchema),
   updateStory,
 );
-
 router.delete(
   '/:storyId',
   authenticate,
   celebrate(storyIdParamSchema),
   deleteStory,
 );
+
 export default router;

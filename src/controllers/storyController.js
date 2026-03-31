@@ -6,7 +6,7 @@ import { User } from '../models/user.js';
 export const getStories = async (req, res) => {
   const { page = 1, perPage = 10 } = req.query;
   const { category } = req.query;
-  const skip = (page - 1) * perPage;
+  const skip = (Number(page) - 1) * Number(perPage);
   const filter = {};
 
   if (category) {
@@ -19,7 +19,7 @@ export const getStories = async (req, res) => {
       .populate('category', '_id category')
       .sort({ rate: -1 })
       .skip(skip)
-      .limit(perPage),
+      .limit(Number(perPage)),
     category ? Category.findById(category).select('_id category') : null,
   ]);
 
@@ -45,7 +45,7 @@ export const getStories = async (req, res) => {
     page,
     perPage,
     totalItems,
-    totalPages: Math.ceil(totalItems / perPage),
+    totalPages: Math.ceil(totalItems / Number(perPage)),
     category: selectedCategory
       ? {
           _id: selectedCategory._id,
@@ -124,28 +124,28 @@ export const updateStory = async (req, res) => {
 
 export const getMyStories = async (req, res) => {
   const { page = 1, perPage = 10 } = req.query;
-  const skip = (page - 1) * perPage;
+  const skip = (Number(page) - 1) * Number(perPage);
 
   const [totalItems, stories] = await Promise.all([
     Story.countDocuments({ ownerId: req.user._id }),
     Story.find({ ownerId: req.user._id })
       .populate('category')
       .skip(skip)
-      .limit(perPage),
+      .limit(Number(perPage)),
   ]);
 
   res.status(200).json({
     page,
     perPage,
     totalItems,
-    totalPages: Math.ceil(totalItems / perPage),
+    totalPages: Math.ceil(totalItems / Number(perPage)),
     stories,
   });
 };
 
 export const getSavedStories = async (req, res) => {
   const { page = 1, perPage = 10 } = req.query;
-  const skip = (page - 1) * perPage;
+  const skip = (Number(page) - 1) * Number(perPage);
 
   const user = await User.findById(req.user._id);
   if (!user) throw createHttpError(404, 'User not found');
@@ -157,13 +157,13 @@ export const getSavedStories = async (req, res) => {
   })
     .populate('category')
     .skip(skip)
-    .limit(perPage);
+    .limit(Number(perPage));
 
   res.status(200).json({
     page,
     perPage,
     totalItems,
-    totalPages: Math.ceil(totalItems / perPage),
+    totalPages: Math.ceil(totalItems / Number(perPage)),
     stories,
   });
 };
@@ -196,59 +196,3 @@ export const toggleSaveStory = async (req, res) => {
   ]);
   res.status(200).json({ message: 'Story saved', isSaved: true });
 };
-
-// export const getPopulareStories = async (req, res) => {
-//   const { page = 1, perPage = 10 } = req.query;
-//   const skip = (page - 1) * perPage;
-
-//   const [totalItems, stories] = await Promise.all([
-//     Story.countDocuments(),
-//     Story.find().populate('_id').sort({ rate: -1 }).skip(skip).limit(perPage),
-//   ]);
-
-//   res.status(200).json({
-//     page,
-//     perPage,
-//     totalItems,
-//     totalPages: Math.ceil(totalItems / perPage),
-//     stories,
-//   });
-// };
-
-// export const saveStory = async (req, res) => {
-//   const { storyId } = req.params;
-
-//   const story = await Story.findById(storyId);
-//   if (!story) {
-//     throw createHttpError(404, 'Story not found');
-//   }
-
-//   const updatedUser = await User.findOneAndUpdate(
-//     { _id: req.user._id, savedStories: { $ne: storyId } },
-//     { $addToSet: { savedStories: storyId } },
-//     { new: true },
-//   );
-//   if (!updatedUser) {
-//     return res.status(200).json({ message: 'Story already saved' });
-//   }
-//   await Story.findByIdAndUpdate(storyId, { $inc: { savedCount: 1 } });
-//   res.status(200).json({ message: 'Story saved' });
-// };
-
-// export const unsaveStory = async (req, res) => {
-//   const { storyId } = req.params;
-//   const story = await Story.findById(storyId);
-//   if (!story) {
-//     throw createHttpError(404, 'Story not found');
-//   }
-//   const updatedUser = await User.findOneAndUpdate(
-//     { _id: req.user._id, savedStories: storyId },
-//     { $pull: { savedStories: storyId } },
-//     { new: true },
-//   );
-//   if (!updatedUser) {
-//     return res.status(200).json({ message: 'Story was not saved before' });
-//   }
-//   await Story.findByIdAndUpdate(storyId, { $inc: { savedCount: -1 } });
-//   res.status(200).json({ message: 'Story unsaved' });
-// };

@@ -1,10 +1,11 @@
 import { Schema, model } from 'mongoose';
+import { COLLECTIONS } from '../constants/collections.js';
 
 const sessionSchema = new Schema(
   {
     userId: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
+      ref: COLLECTIONS.USER,
       required: true,
     },
     accessToken: { type: String, required: true },

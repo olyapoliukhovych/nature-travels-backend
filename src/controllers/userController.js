@@ -4,8 +4,9 @@ import { User } from '../models/user.js';
 import { EmailVerification } from '../models/emailVerification.js';
 import { saveFileToCloudinary } from '../utils/saveFileToCloudinary.js';
 import { sendMail } from '../utils/sendMail.js';
-import { REFRESH_TOKEN_LIFETIME } from '../constants/time.js';
+import { EMAIL_VERIFICATION_LIFETIME } from '../constants/time.js';
 import { Story } from '../models/story.js';
+import { COLLECTIONS } from '../constants/collections.js';
 
 export const getAllUsers = async (req, res) => {
   const users = await User.find();
@@ -46,7 +47,7 @@ export const updateUser = async (req, res) => {
       userId: user._id,
       newEmail: email,
       token,
-      expiresAt: new Date(Date.now() + REFRESH_TOKEN_LIFETIME),
+      expiresAt: new Date(Date.now() + EMAIL_VERIFICATION_LIFETIME),
     });
 
     await user.save();
@@ -95,22 +96,22 @@ export const verifyUserEmail = async (req, res) => {
 export const getUserById = async (req, res) => {
   const { userId } = req.params;
   const { page = 1, perPage = 10 } = req.query;
+  const skip = (Number(page) - 1) * Number(perPage);
 
   const user = await User.findById(userId).populate({
     path: 'savedStories',
+    model: COLLECTIONS.ARTICLE,
     populate: { path: 'category' },
   });
 
   if (!user) throw createHttpError(404, 'User not found');
-
-  const skip = (page - 1) * perPage;
 
   const [totalItems, stories] = await Promise.all([
     Story.countDocuments({ ownerId: userId }),
     Story.find({ ownerId: userId })
       .populate('category')
       .skip(skip)
-      .limit(perPage),
+      .limit(Number(perPage)),
   ]);
   console.log(user);
   console.log(user.toObject());
@@ -118,10 +119,10 @@ export const getUserById = async (req, res) => {
   res.status(200).json({
     user,
     stories: {
-      page,
-      perPage,
+      page: Number(page),
+      perPage: Number(perPage),
       totalItems,
-      totalPages: Math.ceil(totalItems / perPage),
+      totalPages: Math.ceil(totalItems / Number(perPage)),
       items: stories,
     },
   });

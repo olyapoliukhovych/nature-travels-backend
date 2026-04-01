@@ -7,11 +7,16 @@ const userSchema = new Schema(
     email: { type: String, unique: true, required: true, trim: true },
     password: { type: String, required: true },
     avatarUrl: { type: String, default: null },
-    emailVerified: { type: Boolean, default: false },
     savedStories: [{ type: Schema.Types.ObjectId, ref: COLLECTIONS.ARTICLE }],
   },
   { timestamps: true, versionKey: false },
 );
+
+userSchema.methods.toJSON = function () {
+  const obj = this.toObject();
+  delete obj.password;
+  return obj;
+};
 
 userSchema.index(
   { name: 'text' },

@@ -8,7 +8,7 @@ const objectIdValidator = (value, helpers) => {
 export const getStoriesSchema = {
   [Segments.QUERY]: Joi.object({
     page: Joi.number().integer().min(1).default(1),
-    perPage: Joi.number().integer().min(3).max(20).default(10),
+    perPage: Joi.number().integer().min(1).max(20).default(10),
     category: Joi.string()
       .custom(objectIdValidator)
       .messages({ 'string.pattern.base': 'Category must be a valid ObjectId' }),
@@ -28,10 +28,6 @@ export const getStoriesSchema = {
 
 export const createStorySchema = {
   [Segments.BODY]: Joi.object({
-    img: Joi.string().required().messages({
-      'any.required': 'Img is required',
-      'string.base': 'Img url must be a string',
-    }),
     category: Joi.string().custom(objectIdValidator).required().messages({
       'string.base': 'Category must be a string',
       'any.required': 'Category is required',
@@ -46,14 +42,6 @@ export const createStorySchema = {
       'string.min': 'Article should have at least {#limit} characters',
       'any.required': 'Article is required',
     }),
-    rate: Joi.number().default(0).messages({
-      'number.base': 'Rate must be a number',
-    }),
-    ownerId: Joi.string().custom(objectIdValidator).required(),
-    date: Joi.date().required().messages({
-      'string.base': 'Date must be a date',
-      'any.required': 'Date is required',
-    }),
   }),
 };
 
@@ -64,11 +52,7 @@ export const storyIdParamSchema = {
 };
 
 export const updateStorySchema = {
-  [Segments.PARAMS]: Joi.object({
-    storyId: Joi.string().custom(objectIdValidator).required(),
-  }),
   [Segments.BODY]: Joi.object({
-    img: Joi.string().messages({ 'string.base': 'Img url must be a string' }),
     category: Joi.string().custom(objectIdValidator).messages({
       'string.base': 'Category must be a string',
     }),
@@ -80,12 +64,12 @@ export const updateStorySchema = {
       'string.base': 'Article must be a string',
       'string.min': 'Article should have at least {#limit} characters',
     }),
-    rate: Joi.number().messages({
-      'number.base': 'Rate must be a number',
-    }),
-    ownerId: Joi.string().custom(objectIdValidator),
-    date: Joi.date().messages({
-      'string.base': 'Date must be a date',
-    }),
   }).min(1),
+};
+
+export const paginationSchema = {
+  [Segments.QUERY]: Joi.object({
+    page: Joi.number().integer().min(1).default(1),
+    perPage: Joi.number().integer().min(1).max(20).default(10),
+  }),
 };

@@ -9,9 +9,20 @@ import { Story } from '../models/story.js';
 import { COLLECTIONS } from '../constants/collections.js';
 
 export const getAllUsers = async (req, res) => {
-  const users = await User.find();
-
-  res.status(200).json(users);
+  const { page = 1, perPage = 10 } = req.query;
+  const skip = (Number(page) - 1) * Number(perPage);
+  const usersQuery = User.find().select('-password');
+  const [users, totalItems] = await Promise.all([
+    usersQuery.clone().skip(skip).limit(Number(perPage)),
+    User.countDocuments(usersQuery.getFilter()),
+  ]);
+  res.status(200).json({
+    page: Number(page),
+    perPage: Number(perPage),
+    totalItems,
+    totalPages: Math.ceil(totalItems / Number(perPage)),
+    users,
+  });
 };
 
 export const updateUserAvatar = async (req, res) => {
@@ -106,15 +117,12 @@ export const getUserById = async (req, res) => {
 
   if (!user) throw createHttpError(404, 'User not found');
 
+  const storyQuery = Story.find().where('ownerId', userId);
+
   const [totalItems, stories] = await Promise.all([
-    Story.countDocuments({ ownerId: userId }),
-    Story.find({ ownerId: userId })
-      .populate('category')
-      .skip(skip)
-      .limit(Number(perPage)),
+    storyQuery.clone().populate('category').skip(skip).limit(Number(perPage)),
+    Story.countDocuments(storyQuery.getFilter()),
   ]);
-  console.log(user);
-  console.log(user.toObject());
 
   res.status(200).json({
     user,

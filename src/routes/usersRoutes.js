@@ -9,12 +9,18 @@ import {
   getAllUsers,
 } from '../controllers/userController.js';
 import { upload } from '../middleware/multer.js';
-import { updateUserSchema } from '../validation/updateUserValidation.js';
+import {
+  getUsersQuerySchema,
+  updateUserSchema,
+  userIdParamSchema,
+  verifyTokenSchema,
+} from '../validation/updateUserValidation.js';
+import { celebrate } from 'celebrate';
 
 const router = Router();
 
 // whole list
-router.get('/', getAllUsers);
+router.get('/', celebrate(getUsersQuerySchema), getAllUsers);
 
 // current user (static data first)
 router.get('/me', authenticate, getCurrentUser);
@@ -27,9 +33,9 @@ router.patch(
 );
 
 // verification
-router.get('/verify/:token', verifyUserEmail);
+router.get('/verify/:token', celebrate(verifyTokenSchema), verifyUserEmail);
 
 // public profile of another user
-router.get('/:userId', getUserById);
+router.get('/:userId', celebrate(userIdParamSchema), getUserById);
 
 export default router;

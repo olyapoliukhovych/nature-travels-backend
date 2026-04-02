@@ -20,7 +20,7 @@ const storySchema = new Schema(
       ref: COLLECTIONS.USER,
       required: true,
     },
-    date: { type: Date, required: true },
+    date: { type: Date, default: Date.now },
     savedCount: { type: Number, default: 0 },
   },
 

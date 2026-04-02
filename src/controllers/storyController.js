@@ -2,28 +2,29 @@ import createHttpError from 'http-errors';
 import { Story } from '../models/story.js';
 import { Category } from '../models/category.js';
 import { User } from '../models/user.js';
+import { saveStoryImgToCloudinary } from '../utils/saveFileToCloudinary.js';
 
 export const getStories = async (req, res) => {
   const { page = 1, perPage = 10 } = req.query;
   const { category } = req.query;
-  const skip = (Number(page) - 1) * Number(perPage);
+  const skip = (page - 1) * perPage;
   const filter = {};
 
   if (category) {
     filter.category = category;
   }
 
-  const storyQuery = Story.find();
+  const storyQuery = Story.find(filter);
 
-  const [totalItems, rawStories, selectedCategory] = await Promise.all([
+  const [rawStories, totalItems, selectedCategory] = await Promise.all([
     storyQuery
       .clone()
       .populate('category', '_id category')
       .sort({ rate: -1 })
       .skip(skip)
-      .limit(Number(perPage))
+      .limit(perPage)
       .exec(),
-    Story.countDocuments(filter),
+    storyQuery.clone().countDocuments(),
     category ? Category.findById(category).select('_id category') : null,
   ]);
 
@@ -49,7 +50,7 @@ export const getStories = async (req, res) => {
     page,
     perPage,
     totalItems,
-    totalPages: Math.ceil(totalItems / Number(perPage)),
+    totalPages: Math.ceil(totalItems / perPage),
     category: selectedCategory
       ? {
           _id: selectedCategory._id,
@@ -79,33 +80,43 @@ export const createStory = async (req, res) => {
     throw createHttpError(400, 'Category not found');
   }
 
-  const story = await Story.create({ ...req.body, ownerId: req.user._id });
+  if (!req.file) {
+    throw createHttpError(400, 'No file');
+  }
+
+  const result = await saveStoryImgToCloudinary(req.file.buffer, req.user._id);
+
+  const story = await Story.create({
+    ...req.body,
+    ownerId: req.user._id,
+    img: result.secure_url,
+  });
   res.status(201).json(story);
 };
 
 export const getMyStories = async (req, res) => {
   const { page = 1, perPage = 10 } = req.query;
-  const skip = (Number(page) - 1) * Number(perPage);
+  const skip = (page - 1) * perPage;
 
   const storyQuery = Story.find().where('ownerId', req.user._id);
 
   const [totalItems, stories] = await Promise.all([
-    storyQuery.clone().populate('category').skip(skip).limit(Number(perPage)),
-    Story.countDocuments(storyQuery.getFilter()),
+    storyQuery.countDocuments(),
+    storyQuery.clone().populate('category').skip(skip).limit(perPage),
   ]);
 
   res.status(200).json({
     page,
     perPage,
     totalItems,
-    totalPages: Math.ceil(totalItems / Number(perPage)),
+    totalPages: Math.ceil(totalItems / perPage),
     stories,
   });
 };
 
 export const getSavedStories = async (req, res) => {
   const { page = 1, perPage = 10 } = req.query;
-  const skip = (Number(page) - 1) * Number(perPage);
+  const skip = (page - 1) * perPage;
 
   const user = await User.findById(req.user._id);
   if (!user) throw createHttpError(404, 'User not found');
@@ -117,44 +128,15 @@ export const getSavedStories = async (req, res) => {
   })
     .populate('category')
     .skip(skip)
-    .limit(Number(perPage));
+    .limit(perPage);
 
   res.status(200).json({
     page,
     perPage,
     totalItems,
-    totalPages: Math.ceil(totalItems / Number(perPage)),
+    totalPages: Math.ceil(totalItems / perPage),
     stories,
   });
-};
-
-export const toggleSaveStory = async (req, res) => {
-  const { storyId } = req.params;
-  const story = await Story.findById(storyId);
-  if (!story) {
-    throw createHttpError(404, 'Story not found');
-  }
-  const user = await User.findById(req.user._id).select('savedStories');
-  if (!user) {
-    throw createHttpError(404, 'User not found');
-  }
-  const isSaved = user.savedStories.some((id) => id.toString() === storyId);
-  if (isSaved) {
-    await Promise.all([
-      User.findByIdAndUpdate(req.user._id, {
-        $pull: { savedStories: storyId },
-      }),
-      Story.findByIdAndUpdate(storyId, { $inc: { savedCount: -1 } }),
-    ]);
-    return res.status(200).json({ message: 'Story unsaved', isSaved: false });
-  }
-  await Promise.all([
-    User.findByIdAndUpdate(req.user._id, {
-      $addToSet: { savedStories: storyId },
-    }),
-    Story.findByIdAndUpdate(storyId, { $inc: { savedCount: 1 } }),
-  ]);
-  res.status(200).json({ message: 'Story saved', isSaved: true });
 };
 
 export const saveStory = async (req, res) => {

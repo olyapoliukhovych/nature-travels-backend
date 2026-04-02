@@ -10,17 +10,17 @@ import { COLLECTIONS } from '../constants/collections.js';
 
 export const getAllUsers = async (req, res) => {
   const { page = 1, perPage = 10 } = req.query;
-  const skip = (Number(page) - 1) * Number(perPage);
+  const skip = (page - 1) * perPage;
   const usersQuery = User.find().select('-password');
   const [users, totalItems] = await Promise.all([
-    usersQuery.clone().skip(skip).limit(Number(perPage)),
+    usersQuery.skip(skip).limit(perPage),
     User.countDocuments(usersQuery.getFilter()),
   ]);
   res.status(200).json({
-    page: Number(page),
-    perPage: Number(perPage),
+    page: page,
+    perPage: perPage,
     totalItems,
-    totalPages: Math.ceil(totalItems / Number(perPage)),
+    totalPages: Math.ceil(totalItems / perPage),
     users,
   });
 };
@@ -107,7 +107,7 @@ export const verifyUserEmail = async (req, res) => {
 export const getUserById = async (req, res) => {
   const { userId } = req.params;
   const { page = 1, perPage = 10 } = req.query;
-  const skip = (Number(page) - 1) * Number(perPage);
+  const skip = (page - 1) * perPage;
 
   const user = await User.findById(userId).populate({
     path: 'savedStories',
@@ -120,24 +120,38 @@ export const getUserById = async (req, res) => {
   const storyQuery = Story.find().where('ownerId', userId);
 
   const [totalItems, stories] = await Promise.all([
-    storyQuery.clone().populate('category').skip(skip).limit(Number(perPage)),
     Story.countDocuments(storyQuery.getFilter()),
+    storyQuery.clone().populate('category').skip(skip).limit(perPage),
   ]);
 
   res.status(200).json({
     user,
     stories: {
-      page: Number(page),
-      perPage: Number(perPage),
+      page: page,
+      perPage: perPage,
       totalItems,
-      totalPages: Math.ceil(totalItems / Number(perPage)),
+      totalPages: Math.ceil(totalItems / perPage),
       items: stories,
     },
   });
 };
 
 export const getCurrentUser = async (req, res) => {
-  const user = await User.findById(req.user._id).populate('savedStories');
+  const [user, createdStories] = await Promise.all([
+    User.findById(req.user._id)
+      .select('-password')
+      .populate({ path: 'savedStories', populate: { path: 'category' } }),
+    Story.find({ ownerId: req.user._id }).populate('category'),
+  ]);
+
   if (!user) throw createHttpError(404, 'User not found');
-  res.status(200).json(user);
+
+  res.status(200).json({
+    user: {
+      ...user.toObject(),
+      createdStories,
+      createdStoriesCount: createdStories.length,
+      savedStoriesCount: user.savedStories.length,
+    },
+  });
 };

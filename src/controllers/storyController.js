@@ -73,9 +73,6 @@ export const getStoryById = async (req, res) => {
 };
 
 export const createStory = async (req, res) => {
-  console.log('body:', req.body);
-  console.log('file:', req.file);
-
   const { category } = req.body;
 
   const categoryExists = await Category.findById(category);

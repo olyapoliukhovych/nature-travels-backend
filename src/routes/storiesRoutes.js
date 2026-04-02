@@ -31,18 +31,17 @@ router.get(
 router.get('/', celebrate(getStoriesSchema), getStories);
 
 // toggle save story
-(router.post(
+router.post(
   '/:storyId/save',
   authenticate,
   celebrate(storyIdParamSchema),
-  saveStory,
-),
-  router.delete(
+  saveStory);
+router.delete(
     '/:storyId/save',
     authenticate,
     celebrate(storyIdParamSchema),
     unsaveStory,
-  ));
+  );
 
 // actions with specific story
 router.get('/:storyId', celebrate(storyIdParamSchema), getStoryById);

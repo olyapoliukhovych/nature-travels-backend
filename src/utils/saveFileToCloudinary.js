@@ -27,13 +27,13 @@ export async function saveFileToCloudinary(buffer, userId) {
   });
 }
 
-export async function saveStoryImgToCloudinary(buffer, storyId) {
+export async function saveStoryImgToCloudinary(buffer, ownerId) {
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder: 'nature-travels-app/img',
         resource_type: 'image',
-        public_id: `storyImg_${storyId}`,
+        public_id: `storyImg_${ownerId}`,
         overwrite: true,
         unique_filename: false,
       },

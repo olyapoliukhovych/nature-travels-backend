@@ -16,6 +16,7 @@ import {
   paginationSchema,
 } from '../validation/storyValidation.js';
 import { authenticate } from '../middleware/authenticate.js';
+import { upload } from '../middleware/multer.js';
 
 const router = Router();
 
@@ -31,13 +32,13 @@ router.get('/', celebrate(getStoriesSchema), getStories);
 
 // toggle save story
 (router.post(
-  '/story:id/save',
+  '/:storyId/save',
   authenticate,
   celebrate(storyIdParamSchema),
   saveStory,
 ),
   router.delete(
-    '/story:id/save',
+    '/:storyId/save',
     authenticate,
     celebrate(storyIdParamSchema),
     unsaveStory,
@@ -45,7 +46,13 @@ router.get('/', celebrate(getStoriesSchema), getStories);
 
 // actions with specific story
 router.get('/:storyId', celebrate(storyIdParamSchema), getStoryById);
-router.post('/', authenticate, celebrate(createStorySchema), createStory);
+router.post(
+  '/',
+  authenticate,
+  upload.single('img'),
+  celebrate(createStorySchema),
+  createStory,
+);
 
 export default router;
 

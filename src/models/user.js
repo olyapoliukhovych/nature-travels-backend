@@ -9,7 +9,7 @@ const userSchema = new Schema(
     avatarUrl: { type: String, default: null },
     savedStories: [{ type: Schema.Types.ObjectId, ref: COLLECTIONS.ARTICLE }],
   },
-  { timestamps: true, versionKey: false },
+  { timestamps: false, versionKey: false },
 );
 
 userSchema.methods.toJSON = function () {

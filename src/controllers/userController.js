@@ -6,19 +6,49 @@ import { saveFileToCloudinary } from '../utils/saveFileToCloudinary.js';
 import { sendMail } from '../utils/sendMail.js';
 import { EMAIL_VERIFICATION_LIFETIME } from '../constants/time.js';
 import { Story } from '../models/story.js';
-import { COLLECTIONS } from '../constants/collections.js';
 
 export const getAllUsers = async (req, res) => {
   const { page = 1, perPage = 10 } = req.query;
   const skip = (page - 1) * perPage;
-  const usersQuery = User.find().select('-password');
+
   const [users, totalItems] = await Promise.all([
-    usersQuery.skip(skip).limit(perPage),
-    User.countDocuments(usersQuery.getFilter()),
+    User.find()
+      .select('_id name avatarUrl savedStories')
+      .skip(skip)
+      .limit(perPage)
+      .lean(),
+    User.countDocuments(),
   ]);
+
+  const userIds = users.map((user) => user._id);
+
+  const stories = await Story.find({
+    ownerId: { $in: userIds },
+  }).select('_id ownerId');
+
+  const storiesByUserId = {};
+
+  for (const story of stories) {
+    const ownerId = String(story.ownerId);
+
+    if (!storiesByUserId[ownerId]) {
+      storiesByUserId[ownerId] = [];
+    }
+
+    storiesByUserId[ownerId].push(String(story._id));
+  }
+
+  for (const user of users) {
+    const userId = String(user._id);
+    user.savedStories = (user.savedStories ?? []).map(String);
+    user.savedStoriesAmount = user.savedStories.length;
+    user.totalStories = storiesByUserId[userId] ?? [];
+    user.storiesAmount = user.totalStories.length;
+  }
+
   res.status(200).json({
-    page: page,
-    perPage: perPage,
+    page,
+    perPage,
     totalItems,
     totalPages: Math.ceil(totalItems / perPage),
     users,
@@ -109,11 +139,9 @@ export const getUserById = async (req, res) => {
   const { page = 1, perPage = 10 } = req.query;
   const skip = (page - 1) * perPage;
 
-  const user = await User.findById(userId).populate({
-    path: 'savedStories',
-    model: COLLECTIONS.ARTICLE,
-    populate: { path: 'category' },
-  });
+  const user = await User.findById(userId).select(
+    '_id name avatarUrl savedStories',
+  );
 
   if (!user) throw createHttpError(404, 'User not found');
 
@@ -124,11 +152,24 @@ export const getUserById = async (req, res) => {
     storyQuery.clone().populate('category').skip(skip).limit(perPage),
   ]);
 
+  const savedStories = [];
+
+  for (const savedStoryId of user.savedStories ?? []) {
+    savedStories.push(String(savedStoryId));
+  }
+
   res.status(200).json({
-    user,
+    user: {
+      _id: user.id,
+      name: user.name,
+      email: user.email,
+      avatarUrl: user.avatarUrl,
+      savedStories,
+      savedStoriesAmount: savedStories.length,
+    },
     stories: {
-      page: page,
-      perPage: perPage,
+      page,
+      perPage,
       totalItems,
       totalPages: Math.ceil(totalItems / perPage),
       items: stories,
@@ -137,21 +178,33 @@ export const getUserById = async (req, res) => {
 };
 
 export const getCurrentUser = async (req, res) => {
-  const [user, createdStories] = await Promise.all([
+  const [user, totalStories] = await Promise.all([
     User.findById(req.user._id)
-      .select('-password')
-      .populate({ path: 'savedStories', populate: { path: 'category' } }),
-    Story.find({ ownerId: req.user._id }).populate('category'),
+      .select('_id name email avatarUrl savedStories')
+      .lean(),
+    Story.find({ ownerId: req.user._id })
+      .select('_id img category title article rate ownerId savedCount date')
+      .populate('category')
+      .lean(),
   ]);
 
   if (!user) throw createHttpError(404, 'User not found');
 
+  const savedStories = [];
+  for (const storyId of user.savedStories ?? []) {
+    savedStories.push(String(storyId));
+  }
+
   res.status(200).json({
     user: {
-      ...user.toObject(),
-      createdStories,
-      createdStoriesCount: createdStories.length,
-      savedStoriesCount: user.savedStories.length,
+      _id: String(user._id),
+      name: user.name,
+      email: user.email,
+      avatarUrl: user.avatarUrl,
+      savedStories,
+      savedStoriesAmount: savedStories.length,
+      storiesAmount: totalStories.length,
+      totalStories,
     },
   });
 };

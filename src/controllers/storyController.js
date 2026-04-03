@@ -91,6 +91,11 @@ export const createStory = async (req, res) => {
     ownerId: req.user._id,
     img: result.secure_url,
   });
+
+  await User.findByIdAndUpdate(req.user._id, {
+    $push: { totalStories: story._id },
+  });
+
   res.status(201).json(story);
 };
 
@@ -173,10 +178,10 @@ export const unsaveStory = async (req, res) => {
   const user = await User.findById(req.user._id);
   if (!user) throw createHttpError(404, 'User not found');
 
-  const isArticleSaved = user.savedStories.some(
+  const isStorySaved = user.savedStories.some(
     (id) => id.toString() === storyId,
   );
-  if (!isArticleSaved) throw createHttpError(404, "Story wasn't save");
+  if (!isStorySaved) throw createHttpError(404, "Story wasn't saved");
 
   user.savedStories = user.savedStories.filter(
     (id) => id.toString() !== storyId,
@@ -188,6 +193,31 @@ export const unsaveStory = async (req, res) => {
   }
 
   res.status(200).json({ message: 'Story unsaved' });
+};
+
+export const updateStory = async (req, res) => {
+  const { storyId } = req.params;
+
+  if (req.body.category) {
+    const categoryExists = await Category.findById(req.body.category);
+    if (!categoryExists) {
+      throw createHttpError(400, 'Category not found');
+    }
+  }
+
+  const story = await Story.findOneAndUpdate(
+    { _id: storyId, ownerId: req.user._id },
+    req.body,
+    {
+      returnDocument: 'after',
+    },
+  );
+
+  if (!story) {
+    throw createHttpError(404, 'Story not found');
+  }
+
+  res.status(200).json(story);
 };
 
 // unnessery for now
@@ -206,31 +236,6 @@ export const unsaveStory = async (req, res) => {
 //     { savedStories: storyId },
 //     { $pull: { savedStories: storyId } },
 //   );
-
-//   res.status(200).json(story);
-// };
-
-// export const updateStory = async (req, res) => {
-//   const { storyId } = req.params;
-
-//   if (req.body.category) {
-//     const categoryExists = await Category.findById(req.body.category);
-//     if (!categoryExists) {
-//       throw createHttpError(400, 'Category not found');
-//     }
-//   }
-
-//   const story = await Story.findOneAndUpdate(
-//     { _id: storyId, ownerId: req.user._id },
-//     req.body,
-//     {
-//       returnDocument: 'after',
-//     },
-//   );
-
-//   if (!story) {
-//     throw createHttpError(404, 'Story not found');
-//   }
 
 //   res.status(200).json(story);
 // };

@@ -11,6 +11,7 @@ import storiesRoutes from './routes/storiesRoutes.js';
 import usersRoutes from './routes/usersRoutes.js';
 import categoriesRoutes from './routes/categoriesRoutes.js';
 import authRouter from './routes/authRoutes.js';
+import { setupSwagger } from './swagger.js';
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -32,6 +33,9 @@ app.use('/auth', authRouter);
 app.use('/stories', storiesRoutes);
 app.use('/users', usersRoutes);
 app.use(categoriesRoutes);
+
+//!SWAGGER
+setupSwagger(app);
 
 //!ERRORS
 app.use(errors());

@@ -13,7 +13,7 @@ const userSchema = new Schema(
     },
     savedStories: [{ type: Schema.Types.ObjectId, ref: COLLECTIONS.ARTICLE }],
   },
-  { timestamps: true, versionKey: false },
+  { timestamps: false, versionKey: false },
 );
 
 userSchema.methods.toJSON = function () {

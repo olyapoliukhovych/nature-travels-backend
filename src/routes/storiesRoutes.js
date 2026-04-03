@@ -7,6 +7,7 @@ import {
   getSavedStories,
   saveStory,
   unsaveStory,
+  updateStory,
 } from '../controllers/storyController.js';
 import { celebrate } from 'celebrate';
 import {
@@ -14,6 +15,7 @@ import {
   createStorySchema,
   getStoriesSchema,
   paginationSchema,
+  updateStorySchema,
 } from '../validation/storyValidation.js';
 import { authenticate } from '../middleware/authenticate.js';
 import { upload } from '../middleware/multer.js';
@@ -29,7 +31,12 @@ router.get(
   getSavedStories,
 );
 router.get('/', celebrate(getStoriesSchema), getStories);
-
+router.patch(
+  '/:storyId',
+  authenticate,
+  celebrate(updateStorySchema),
+  updateStory,
+);
 // toggle save story
 router.post(
   '/:storyId/save',
@@ -56,12 +63,7 @@ router.post(
 export default router;
 
 // unnessery for now
-// router.patch(
-//   '/:storyId',
-//   authenticate,
-//   celebrate(updateStorySchema),
-//   updateStory,
-// );
+
 // router.delete(
 //   '/:storyId',
 //   authenticate,

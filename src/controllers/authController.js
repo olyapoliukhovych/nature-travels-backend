@@ -49,18 +49,14 @@ export const refreshUserSession = async (req, res, next) => {
     return next(createHttpError(401, 'Session token expired'));
   }
 
-  // await Session.deleteOne({ _id: sessionId, refreshToken });
+  await Session.deleteOne({ _id: sessionId, refreshToken });
 
-  const newSession = await createSession(session.userId); // createSession can clean up old sessions itself
+  const newSession = await createSession(session.userId);
 
   setSessionCookies(res, newSession);
 
   res.status(200).json({
-    status: 200,
-    message: 'Successfully refreshed a session!',
-    data: {
-      accessToken: newSession.accessToken,
-    },
+    message: 'Session refreshed!',
   });
 };
 

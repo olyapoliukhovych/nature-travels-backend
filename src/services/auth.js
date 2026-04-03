@@ -6,8 +6,6 @@ import {
 } from '../constants/time.js';
 
 export const createSession = async (userId) => {
-  await Session.deleteOne({ userId });
-
   return await Session.create({
     userId,
     accessToken: crypto.randomBytes(30).toString('base64'),

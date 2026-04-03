@@ -6,7 +6,11 @@ const userSchema = new Schema(
     name: { type: String, required: true, trim: true },
     email: { type: String, unique: true, required: true, trim: true },
     password: { type: String, required: true },
-    avatarUrl: { type: String, default: null },
+    avatarUrl: {
+      type: String,
+      required: false,
+      default: 'https://ac.goit.global/fullstack/react/default-avatar.jpg',
+    },
     savedStories: [{ type: Schema.Types.ObjectId, ref: COLLECTIONS.ARTICLE }],
   },
   { timestamps: true, versionKey: false },

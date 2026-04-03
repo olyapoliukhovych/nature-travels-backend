@@ -9,7 +9,7 @@ export const swaggerSpec = {
   },
   servers: [
     {
-      url: 'nature-travels-backend.onrender.com',
+      url: 'https://nature-travels-backend.onrender.com',
     },
   ],
   tags: [

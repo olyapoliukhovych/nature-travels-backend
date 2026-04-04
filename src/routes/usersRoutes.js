@@ -7,6 +7,10 @@ import {
   getCurrentUser,
   getUserById,
   getAllUsers,
+  getMyStories,
+  getSavedStories,
+  saveStory,
+  unsaveStory,
 } from '../controllers/userController.js';
 import { upload } from '../middleware/multer.js';
 import {
@@ -16,6 +20,10 @@ import {
   verifyTokenSchema,
 } from '../validation/updateUserValidation.js';
 import { celebrate } from 'celebrate';
+import {
+  paginationSchema,
+  storyIdParamSchema,
+} from '../validation/storyValidation.js';
 
 const router = Router();
 
@@ -25,11 +33,35 @@ router.get('/', celebrate(getUsersQuerySchema), getAllUsers);
 // current user (static data first)
 router.get('/me', authenticate, getCurrentUser);
 router.patch('/me', authenticate, updateUserSchema, updateUser);
+
+router.get('/created', authenticate, celebrate(paginationSchema), getMyStories);
+
+router.get(
+  '/saved',
+  authenticate,
+  celebrate(paginationSchema),
+  getSavedStories,
+);
+
 router.patch(
   '/me/avatar',
   authenticate,
   upload.single('avatar'),
   updateUserAvatar,
+);
+
+// toggle save unsave story
+router.post(
+  '/:storyId/save',
+  authenticate,
+  celebrate(storyIdParamSchema),
+  saveStory,
+);
+router.delete(
+  '/:storyId/save',
+  authenticate,
+  celebrate(storyIdParamSchema),
+  unsaveStory,
 );
 
 // verification

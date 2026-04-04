@@ -12,7 +12,7 @@ import { upload } from '../middleware/multer.js';
 import {
   getUsersQuerySchema,
   updateUserSchema,
-  userIdParamSchema,
+  userParamSchema,
   verifyTokenSchema,
 } from '../validation/updateUserValidation.js';
 import { celebrate } from 'celebrate';
@@ -36,6 +36,6 @@ router.patch(
 router.get('/verify/:token', celebrate(verifyTokenSchema), verifyUserEmail);
 
 // public profile of another user
-router.get('/:userId', celebrate(userIdParamSchema), getUserById);
+router.get('/:userId', celebrate(userParamSchema), getUserById);
 
 export default router;

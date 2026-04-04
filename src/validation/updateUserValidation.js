@@ -26,13 +26,17 @@ export const verifyTokenSchema = {
   }),
 };
 
-export const userIdParamSchema = {
+export const userParamSchema = {
   [Segments.PARAMS]: Joi.object({
     userId: Joi.string().custom(objectIdValidator).required().messages({
       'string.base': 'User id must be a string',
       'any.required': 'User id is required',
       'any.invalid': 'User id must be a valid ObjectId',
     }),
+  }),
+  [Segments.QUERY]: Joi.object({
+    page: Joi.number().integer().min(1).default(1),
+    perPage: Joi.number().integer().min(1).max(50).default(10),
   }),
 };
 

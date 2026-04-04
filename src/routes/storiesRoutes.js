@@ -3,10 +3,6 @@ import {
   createStory,
   getStoryById,
   getStories,
-  getMyStories,
-  getSavedStories,
-  saveStory,
-  unsaveStory,
   updateStory,
 } from '../controllers/storyController.js';
 import { celebrate } from 'celebrate';
@@ -14,7 +10,6 @@ import {
   storyIdParamSchema,
   createStorySchema,
   getStoriesSchema,
-  paginationSchema,
   updateStorySchema,
 } from '../validation/storyValidation.js';
 import { authenticate } from '../middleware/authenticate.js';
@@ -23,35 +18,20 @@ import { upload } from '../middleware/multer.js';
 const router = Router();
 
 // general lists
-router.get('/created', authenticate, celebrate(paginationSchema), getMyStories);
-router.get(
-  '/saved',
-  authenticate,
-  celebrate(paginationSchema),
-  getSavedStories,
-);
+
 router.get('/', celebrate(getStoriesSchema), getStories);
+// створити ПУБЛІЧНИЙ ендпоінт для ОТРИМАННЯ історій + фільтр по категріям + пагінція + за типом "popular"
+
 router.patch(
   '/:storyId',
   authenticate,
   celebrate(updateStorySchema),
   updateStory,
 );
-// toggle save story
-router.post(
-  '/:storyId/save',
-  authenticate,
-  celebrate(storyIdParamSchema),
-  saveStory);
-router.delete(
-    '/:storyId/save',
-    authenticate,
-    celebrate(storyIdParamSchema),
-    unsaveStory,
-  );
 
 // actions with specific story
 router.get('/:storyId', celebrate(storyIdParamSchema), getStoryById);
+
 router.post(
   '/',
   authenticate,

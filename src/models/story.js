@@ -1,5 +1,4 @@
 import { model, Schema } from 'mongoose';
-import { COLLECTIONS } from '../constants/collections.js';
 
 const storySchema = new Schema(
   {
@@ -7,17 +6,17 @@ const storySchema = new Schema(
       type: String,
       required: true,
     },
-    category: {
+    categoryId: {
       type: Schema.Types.ObjectId,
       required: true,
-      ref: COLLECTIONS.CATEGORY,
+      ref: 'Category',
     },
     title: { type: String, required: true, trim: true },
     article: { type: String, required: true, trim: true },
     rate: { type: Number, default: 0 },
     ownerId: {
       type: Schema.Types.ObjectId,
-      ref: COLLECTIONS.USER,
+      ref: 'User',
       required: true,
     },
     date: { type: Date, default: Date.now },
@@ -30,13 +29,4 @@ const storySchema = new Schema(
   },
 );
 
-storySchema.index(
-  { title: 'text' },
-  {
-    name: 'StoryTextIndex',
-    weights: { title: 10 },
-    default_language: 'none',
-  },
-);
-
-export const Story = model(COLLECTIONS.ARTICLE, storySchema);
+export const Story = model('Article', storySchema);

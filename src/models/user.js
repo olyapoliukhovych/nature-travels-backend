@@ -1,5 +1,4 @@
 import { model, Schema } from 'mongoose';
-import { COLLECTIONS } from '../constants/collections.js';
 
 const userSchema = new Schema(
   {
@@ -8,13 +7,11 @@ const userSchema = new Schema(
     password: { type: String, required: true },
     avatarUrl: {
       type: String,
-      required: false,
       default: 'https://ac.goit.global/fullstack/react/default-avatar.jpg',
     },
-    savedStories: [{ type: Schema.Types.ObjectId, ref: COLLECTIONS.ARTICLE }],
-    savedStoriesAmount: { type: Number, default: 0 },
-    totalStories: [{ type: Schema.Types.ObjectId, ref: COLLECTIONS.ARTICLE }],
-    storiesAmount: { type: Number, default: 0 },
+    totalUserStories: { type: Number, default: 0 },
+    savedStories: [{ type: Schema.Types.ObjectId, ref: 'Article' }],
+    userStories: [{ type: Schema.Types.ObjectId, ref: 'Article' }],
   },
   { timestamps: false, versionKey: false },
 );
@@ -25,13 +22,4 @@ userSchema.methods.toJSON = function () {
   return obj;
 };
 
-userSchema.index(
-  { name: 'text' },
-  {
-    name: 'UserTextIndex',
-    weights: { name: 10 },
-    default_language: 'none',
-  },
-);
-
-export const User = model(COLLECTIONS.USER, userSchema);
+export const User = model('User', userSchema);

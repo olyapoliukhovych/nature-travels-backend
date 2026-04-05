@@ -4,6 +4,7 @@ import createHttpError from 'http-errors';
 import { User } from '../models/user.js';
 import { createSession, setSessionCookies } from '../services/auth.js';
 import { Session } from '../models/session.js';
+import { isValidObjectId } from 'mongoose';
 
 export const registerUser = async (req, res, next) => {
   const { email, password } = req.body;
@@ -63,7 +64,9 @@ export const refreshUserSession = async (req, res, next) => {
 export const logoutUser = async (req, res) => {
   const { sessionId } = req.cookies;
 
-  if (!sessionId) {
+  const isValid = sessionId && isValidObjectId(sessionId);
+
+  if (isValid) {
     await Session.deleteOne({ _id: sessionId });
   }
 

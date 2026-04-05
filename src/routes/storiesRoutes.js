@@ -21,13 +21,7 @@ import { upload } from '../middleware/multer.js';
 const router = Router();
 
 // general lists
-router.get('/created', authenticate, celebrate(paginationSchema), getMyStories);
-router.get(
-  '/saved',
-  authenticate,
-  celebrate(paginationSchema),
-  getSavedStories,
-);
+
 router.get('/', celebrate(getStoriesSchema), getStories);
 
 // !! updateStory  не реализован на фронте
@@ -56,6 +50,7 @@ router.delete(
 
 // actions with specific story
 router.get('/:storyId', celebrate(storyIdParamSchema), getStoryById);
+
 router.post(
   '/',
   authenticate,

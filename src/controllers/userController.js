@@ -45,12 +45,13 @@ export const getAllUsers = async (req, res) => {
     user.totalStories = storiesByUserId[userId] ?? [];
     user.storiesAmount = user.totalStories.length;
   }
+  const totalPages = Math.ceil(totalItems / perPage);
 
   res.status(200).json({
     page,
     perPage,
     totalItems,
-    totalPages: Math.ceil(totalItems / perPage),
+    totalPages: totalPages,
     users,
   });
 };
@@ -158,6 +159,8 @@ export const getUserById = async (req, res) => {
     savedStories.push(String(savedStoryId));
   }
 
+  const totalPages = Math.ceil(totalItems / perPage);
+
   res.status(200).json({
     user: {
       _id: user.id,
@@ -171,40 +174,133 @@ export const getUserById = async (req, res) => {
       page,
       perPage,
       totalItems,
-      totalPages: Math.ceil(totalItems / perPage),
+      totalPages: totalPages,
       items: stories,
     },
   });
 };
 
 export const getCurrentUser = async (req, res) => {
-  const [user, totalStories] = await Promise.all([
+  const [user, userStories] = await Promise.all([
     User.findById(req.user._id)
       .select('_id name email avatarUrl savedStories')
       .lean(),
-    Story.find({ ownerId: req.user._id })
-      .select('_id img category title article rate ownerId savedCount date')
-      .populate('category')
-      .lean(),
+    Story.find({ ownerId: req.user._id }).select('_id').lean(),
   ]);
 
   if (!user) throw createHttpError(404, 'User not found');
 
-  const savedStories = [];
-  for (const storyId of user.savedStories ?? []) {
-    savedStories.push(String(storyId));
-  }
+  const savedStories = (user.savedStories ?? []).map((id) => String(id));
+  const totalStories = userStories.map((story) => String(story._id));
 
   res.status(200).json({
     user: {
       _id: String(user._id),
       name: user.name,
       email: user.email,
-      avatarUrl: user.avatarUrl,
+      avatarUrl:
+        user.avatarUrl ??
+        'https://ac.goit.global/fullstack/react/default-avatar.jpg',
       savedStories,
       savedStoriesAmount: savedStories.length,
-      storiesAmount: totalStories.length,
       totalStories,
+      storiesAmount: totalStories.length,
     },
   });
+};
+
+export const getMyStories = async (req, res) => {
+  const { page = 1, perPage = 10 } = req.query;
+  const skip = (page - 1) * perPage;
+
+  const storyQuery = Story.find().where('ownerId', req.user._id);
+
+  const [totalItems, stories] = await Promise.all([
+    storyQuery.countDocuments(),
+    storyQuery.clone().populate('category').skip(skip).limit(perPage),
+  ]);
+
+  res.status(200).json({
+    page,
+    perPage,
+    totalItems,
+    totalPages: Math.ceil(totalItems / perPage),
+    stories,
+  });
+};
+
+export const getSavedStories = async (req, res) => {
+  const { page = 1, perPage = 10 } = req.query;
+  const skip = (page - 1) * perPage;
+
+  const user = await User.findById(req.user._id);
+  if (!user) throw createHttpError(404, 'User not found');
+
+  const totalItems = user.savedStories.length;
+
+  const stories = await Story.find({
+    _id: { $in: user.savedStories },
+  })
+    .populate('category')
+    .skip(skip)
+    .limit(perPage);
+
+  res.status(200).json({
+    page,
+    perPage,
+    totalItems,
+    totalPages: Math.ceil(totalItems / perPage),
+    stories,
+  });
+};
+
+export const saveStory = async (req, res) => {
+  const { storyId } = req.params;
+
+  const story = await Story.findById(storyId);
+  if (!story) throw createHttpError(404, 'Story not found');
+
+  const user = await User.findById(req.user._id);
+  if (!user) throw createHttpError(404, 'User not found');
+
+  const isArticleSaved = user.savedStories.some(
+    (id) => id.toString() === storyId,
+  );
+  if (isArticleSaved) {
+    return res.status(200).json({ message: 'Story already saved' });
+  }
+
+  user.savedStories.push(storyId);
+  await user.save();
+
+  story.savedCount += 1;
+  await story.save();
+
+  res.status(200).json({ message: 'Story saved' });
+};
+
+export const unsaveStory = async (req, res) => {
+  const { storyId } = req.params;
+
+  const story = await Story.findById(storyId);
+  if (!story) throw createHttpError(404, 'Story not found');
+
+  const user = await User.findById(req.user._id);
+  if (!user) throw createHttpError(404, 'User not found');
+
+  const isStorySaved = user.savedStories.some(
+    (id) => id.toString() === storyId,
+  );
+  if (!isStorySaved) throw createHttpError(404, "Story wasn't saved");
+
+  user.savedStories = user.savedStories.filter(
+    (id) => id.toString() !== storyId,
+  );
+
+  if (story.savedCount > 0) {
+    story.savedCount -= 1;
+    await story.save();
+  }
+
+  res.status(200).json({ message: 'Story unsaved' });
 };

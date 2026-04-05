@@ -9,26 +9,15 @@ export const getStoriesSchema = {
   [Segments.QUERY]: Joi.object({
     page: Joi.number().integer().min(1).default(1),
     perPage: Joi.number().integer().min(1).max(20).default(10),
-    category: Joi.string()
+    categoryId: Joi.string()
       .custom(objectIdValidator)
       .messages({ 'string.pattern.base': 'Category must be a valid ObjectId' }),
-    title: Joi.string().min(3).messages({
-      'string.min': 'Title should have at least {#limit} characters',
-    }),
-    rate: Joi.number().min(0).max(100),
-
-    sortBy: Joi.string()
-      .valid('_id', 'title', 'category', 'rate', 'date', 'createdAt')
-      .default('_id'),
-    sortOrder: Joi.string().valid('asc', 'desc').default('asc'),
-
-    search: Joi.string().trim().allow(''),
   }),
 };
 
 export const createStorySchema = {
   [Segments.BODY]: Joi.object({
-    category: Joi.string().custom(objectIdValidator).required().messages({
+    categoryId: Joi.string().custom(objectIdValidator).required().messages({
       'string.base': 'Category must be a string',
       'any.required': 'Category is required',
     }),

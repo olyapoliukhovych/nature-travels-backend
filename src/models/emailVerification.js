@@ -1,10 +1,9 @@
 import { model, Schema } from 'mongoose';
-import { COLLECTIONS } from '../constants/collections.js';
 
 const emailVerificationSchema = new Schema({
   userId: {
     type: Schema.Types.ObjectId,
-    ref: COLLECTIONS.USER,
+    ref: 'User',
     required: true,
   },
   newEmail: { type: String, required: true },

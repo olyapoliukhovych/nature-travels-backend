@@ -7,6 +7,10 @@ import {
   getCurrentUser,
   getUserById,
   getAllUsers,
+  getMyStories,
+  getSavedStories,
+  saveStory,
+  unsaveStory,
 } from '../controllers/userController.js';
 import { upload } from '../middleware/multer.js';
 import {
@@ -15,15 +19,46 @@ import {
   userIdParamSchema,
   verifyTokenSchema,
 } from '../validation/updateUserValidation.js';
+import {
+  paginationSchema,
+  storyIdParamSchema,
+} from '../validation/storyValidation.js';
 import { celebrate } from 'celebrate';
 
 const router = Router();
 
-// whole list
 router.get('/', celebrate(getUsersQuerySchema), getAllUsers);
 
-// current user (static data first)
 router.get('/me', authenticate, getCurrentUser);
+
+router.get('/created', authenticate, celebrate(paginationSchema), getMyStories);
+
+router.get(
+  '/saved',
+  authenticate,
+  celebrate(paginationSchema),
+  getSavedStories,
+);
+
+router.get('/:userId', celebrate(userIdParamSchema), getUserById);
+
+router.get('/me', authenticate, getCurrentUser);
+
+router.post(
+  '/:storyId/save',
+  authenticate,
+  celebrate(storyIdParamSchema),
+  saveStory,
+);
+router.delete(
+  '/:storyId/save',
+  authenticate,
+  celebrate(storyIdParamSchema),
+  unsaveStory,
+);
+
+// ! not use
+
 router.patch('/me', authenticate, updateUserSchema, updateUser);
 router.patch(
   '/me/avatar',
@@ -34,8 +69,5 @@ router.patch(
 
 // verification
 router.get('/verify/:token', celebrate(verifyTokenSchema), verifyUserEmail);
-
-// public profile of another user
-router.get('/:userId', celebrate(userIdParamSchema), getUserById);
 
 export default router;

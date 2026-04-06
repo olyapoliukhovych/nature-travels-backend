@@ -29,4 +29,4 @@ const storySchema = new Schema(
   },
 );
 
-export const Story = model('Article', storySchema);
+export const Story = model('Story', storySchema);

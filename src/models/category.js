@@ -1,5 +1,4 @@
 import { model, Schema } from 'mongoose';
-import { COLLECTIONS } from '../constants/collections.js';
 
 const categorySchema = new Schema(
   {
@@ -12,4 +11,4 @@ const categorySchema = new Schema(
   { versionKey: false, timestamps: true },
 );
 
-export const Category = model(COLLECTIONS.CATEGORY, categorySchema);
+export const Category = model('Category', categorySchema);

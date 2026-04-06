@@ -33,8 +33,7 @@ export async function saveStoryImgToCloudinary(buffer, ownerId) {
       {
         folder: 'nature-travels-app/img',
         resource_type: 'image',
-        public_id: `storyImg_${ownerId}`,
-        overwrite: true,
+
         unique_filename: false,
       },
       (err, result) => (err ? reject(err) : resolve(result)),

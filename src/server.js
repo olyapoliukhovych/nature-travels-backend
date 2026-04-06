@@ -12,15 +12,13 @@ import usersRoutes from './routes/usersRoutes.js';
 import categoriesRoutes from './routes/categoriesRoutes.js';
 import authRouter from './routes/authRoutes.js';
 import { setupSwagger } from './swagger.js';
-import corsOptions from './config/corsOptions.js';
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
 
 app.use(logger);
 app.use(express.json());
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+app.use(cors());
 app.use(cookieParser());
 
 //!ROUTES

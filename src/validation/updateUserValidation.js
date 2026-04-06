@@ -31,7 +31,7 @@ export const verifyTokenSchema = {
   }),
 };
 
-export const userIdParamSchema = {
+export const userParamSchema = {
   [Segments.PARAMS]: Joi.object({
     userId: Joi.string().custom(objectIdValidator).required().messages({
       'string.base': 'User id must be a string',

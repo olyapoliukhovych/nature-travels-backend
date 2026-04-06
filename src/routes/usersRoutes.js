@@ -16,7 +16,7 @@ import { upload } from '../middleware/multer.js';
 import {
   getUsersQuerySchema,
   updateUserSchema,
-  userIdParamSchema,
+  userParamSchema,
   verifyTokenSchema,
 } from '../validation/updateUserValidation.js';
 import {
@@ -24,6 +24,10 @@ import {
   storyIdParamSchema,
 } from '../validation/storyValidation.js';
 import { celebrate } from 'celebrate';
+import {
+  paginationSchema,
+  storyIdParamSchema,
+} from '../validation/storyValidation.js';
 
 const router = Router();
 
@@ -42,8 +46,6 @@ router.get(
 
 router.get('/:userId', celebrate(userIdParamSchema), getUserById);
 
-router.get('/me', authenticate, getCurrentUser);
-
 router.post(
   '/:storyId/save',
   authenticate,
@@ -59,7 +61,6 @@ router.delete(
 
 // ! not use
 
-router.patch('/me', authenticate, updateUserSchema, updateUser);
 router.patch(
   '/me/avatar',
   authenticate,

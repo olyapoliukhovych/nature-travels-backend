@@ -42,8 +42,6 @@ export default router;
 
 // toggle save story
 
-// actions with specific story
-
 // unnessery for now
 
 // router.delete(

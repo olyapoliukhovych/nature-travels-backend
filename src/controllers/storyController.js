@@ -3,6 +3,7 @@ import { Story } from '../models/story.js';
 import { Category } from '../models/category.js';
 import { User } from '../models/user.js';
 import { saveStoryImgToCloudinary } from '../utils/saveFileToCloudinary.js';
+import { v2 as cloudinary } from 'cloudinary';
 
 export const getStories = async (req, res) => {
   const { page = 1, perPage = 10, categoryId } = req.query;
@@ -61,17 +62,34 @@ export const createStory = async (req, res) => {
 
   const result = await saveStoryImgToCloudinary(req.file.buffer, req.user._id);
 
-  const story = await Story.create({
-    ...req.body,
-    ownerId: req.user._id,
-    img: result.secure_url,
-  });
+  const imagePublicId = result.public_id;
 
-  await User.findByIdAndUpdate(req.user._id, {
-    $addToSet: { userStories: story._id },
-  });
+  try {
+    const story = await Story.create({
+      ...req.body,
+      ownerId: req.user._id,
+      img: result.secure_url,
+    });
 
-  res.status(201).json(story);
+    await User.findByIdAndUpdate(req.user._id, {
+      $addToSet: { userStories: story._id },
+      $inc: { totalUserStories: 1 },
+    });
+
+    return res.status(201).json({
+      message: 'Story created successfully',
+      success: true,
+    });
+  } catch {
+    if (imagePublicId) {
+      await cloudinary.uploader.destroy(imagePublicId);
+    }
+
+    return res.status(400).json({
+      message: 'Failed to save story',
+      success: false,
+    });
+  }
 };
 
 // !! updateStory не реализован на фронте

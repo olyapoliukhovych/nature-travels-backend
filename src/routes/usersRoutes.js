@@ -2,7 +2,6 @@ import { Router } from 'express';
 import { authenticate } from '../middleware/authenticate.js';
 import {
   updateUserAvatar,
-  updateUser,
   verifyUserEmail,
   getCurrentUser,
   getUserById,
@@ -15,7 +14,6 @@ import {
 import { upload } from '../middleware/multer.js';
 import {
   getUsersQuerySchema,
-  updateUserSchema,
   userParamSchema,
   verifyTokenSchema,
 } from '../validation/updateUserValidation.js';
@@ -24,10 +22,6 @@ import {
   storyIdParamSchema,
 } from '../validation/storyValidation.js';
 import { celebrate } from 'celebrate';
-import {
-  paginationSchema,
-  storyIdParamSchema,
-} from '../validation/storyValidation.js';
 
 const router = Router();
 
@@ -44,7 +38,7 @@ router.get(
   getSavedStories,
 );
 
-router.get('/:userId', celebrate(userIdParamSchema), getUserById);
+router.get('/:userId', celebrate(userParamSchema), getUserById);
 
 router.post(
   '/:storyId/save',

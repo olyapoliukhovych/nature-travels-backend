@@ -19,6 +19,10 @@ import {
   userParamSchema,
   verifyTokenSchema,
 } from '../validation/updateUserValidation.js';
+import {
+  paginationSchema,
+  storyIdParamSchema,
+} from '../validation/storyValidation.js';
 import { celebrate } from 'celebrate';
 import {
   paginationSchema,
@@ -27,12 +31,9 @@ import {
 
 const router = Router();
 
-// whole list
 router.get('/', celebrate(getUsersQuerySchema), getAllUsers);
 
-// current user (static data first)
 router.get('/me', authenticate, getCurrentUser);
-router.patch('/me', authenticate, updateUserSchema, updateUser);
 
 router.get('/created', authenticate, celebrate(paginationSchema), getMyStories);
 
@@ -43,14 +44,8 @@ router.get(
   getSavedStories,
 );
 
-router.patch(
-  '/me/avatar',
-  authenticate,
-  upload.single('avatar'),
-  updateUserAvatar,
-);
+router.get('/:userId', celebrate(userIdParamSchema), getUserById);
 
-// toggle save unsave story
 router.post(
   '/:storyId/save',
   authenticate,
@@ -64,10 +59,16 @@ router.delete(
   unsaveStory,
 );
 
+// ! not use
+
+router.patch(
+  '/me/avatar',
+  authenticate,
+  upload.single('avatar'),
+  updateUserAvatar,
+);
+
 // verification
 router.get('/verify/:token', celebrate(verifyTokenSchema), verifyUserEmail);
-
-// public profile of another user
-router.get('/:userId', celebrate(userParamSchema), getUserById);
 
 export default router;

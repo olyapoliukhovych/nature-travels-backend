@@ -16,7 +16,6 @@ export const getStories = async (req, res) => {
   const [totalItems, stories] = await Promise.all([
     storyQuery.clone().countDocuments(),
     storyQuery
-      .clone()
       .populate('categoryId')
       .populate('ownerId', 'name')
       .sort({ rate: -1 })
@@ -75,109 +74,7 @@ export const createStory = async (req, res) => {
   res.status(201).json(story);
 };
 
-export const getMyStories = async (req, res) => {
-  const { page = 1, perPage = 10 } = req.query;
-  const skip = (page - 1) * perPage;
-
-  const storyQuery = Story.find({ ownerId: req.user._id });
-
-  const [totalItems, stories] = await Promise.all([
-    storyQuery.clone().countDocuments(),
-    storyQuery.populate('categoryId').skip(skip).limit(perPage),
-  ]);
-
-  const totalPages = Math.ceil(totalItems / perPage);
-
-  res.status(200).json({
-    page,
-    perPage,
-    totalItems,
-    totalPages,
-    stories,
-  });
-};
-
-export const getSavedStories = async (req, res) => {
-  const { page = 1, perPage = 10 } = req.query;
-  const skip = (page - 1) * perPage;
-
-  const user = await User.findById(req.user._id);
-  if (!user) throw createHttpError(404, 'User not found');
-
-  const totalItems = user.savedStories.length;
-
-  const stories = await Story.find({
-    _id: { $in: user.savedStories },
-  })
-    .populate('categoryId')
-    .skip(skip)
-    .limit(perPage);
-
-  const totalPages = Math.ceil(totalItems / perPage);
-
-  res.status(200).json({
-    page,
-    perPage,
-    totalItems,
-    totalPages,
-    stories,
-  });
-};
-
-export const saveStory = async (req, res) => {
-  const { storyId } = req.params;
-
-  const story = await Story.findById(storyId);
-  if (!story) throw createHttpError(404, 'Story not found');
-
-  const user = await User.findById(req.user._id);
-  if (!user) throw createHttpError(404, 'User not found');
-
-  const isArticleSaved = user.savedStories.some(
-    (id) => id.toString() === storyId.toString(),
-  );
-  if (isArticleSaved) {
-    return res.status(200).json({ message: 'Story already saved' });
-  }
-
-  user.savedStories.push(storyId);
-  await user.save();
-
-  story.savedCount += 1;
-  await story.save();
-
-  res.status(200).json({ message: 'Story saved' });
-};
-
-export const unsaveStory = async (req, res) => {
-  const { storyId } = req.params;
-  const storyIdNormalized = storyId.toString();
-
-  const story = await Story.findById(storyIdNormalized);
-  if (!story) throw createHttpError(404, 'Story not found');
-
-  const user = await User.findById(req.user._id);
-  if (!user) throw createHttpError(404, 'User not found');
-
-  const isStorySaved = user.savedStories.some(
-    (id) => id.toString() === storyIdNormalized,
-  );
-  if (!isStorySaved) throw createHttpError(404, "Story wasn't saved");
-
-  user.savedStories = user.savedStories.filter(
-    (id) => id.toString() !== storyIdNormalized,
-  );
-  await user.save();
-
-  if (story.savedCount > 0) {
-    story.savedCount -= 1;
-    await story.save();
-  }
-
-  res.status(200).json({ message: 'Story unsaved' });
-};
-
-// !! updateStory по не реализован на фронте
+// !! updateStory не реализован на фронте
 
 // export const updateStory = async (req, res) => {
 //   const { storyId } = req.params;

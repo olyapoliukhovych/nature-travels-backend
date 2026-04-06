@@ -10,8 +10,8 @@ const userSchema = new Schema(
       default: 'https://ac.goit.global/fullstack/react/default-avatar.jpg',
     },
     totalUserStories: { type: Number, default: 0 },
-    savedStories: [{ type: Schema.Types.ObjectId, ref: 'Article' }],
-    userStories: [{ type: Schema.Types.ObjectId, ref: 'Article' }],
+    savedStories: [{ type: Schema.Types.ObjectId, ref: 'Story' }],
+    userStories: [{ type: Schema.Types.ObjectId, ref: 'Story' }],
   },
   { timestamps: false, versionKey: false },
 );

@@ -8,6 +8,11 @@ const objectIdValidator = (value, helpers) => {
   return value;
 };
 
+export const paginationParams = Joi.object({
+  page: Joi.number().integer().min(1).default(1),
+  perPage: Joi.number().integer().min(1).max(50).default(10),
+});
+
 export const updateUserSchema = celebrate({
   [Segments.BODY]: Joi.object()
     .keys({
@@ -34,15 +39,9 @@ export const userParamSchema = {
       'any.invalid': 'User id must be a valid ObjectId',
     }),
   }),
-  [Segments.QUERY]: Joi.object({
-    page: Joi.number().integer().min(1).default(1),
-    perPage: Joi.number().integer().min(1).max(50).default(10),
-  }),
+  [Segments.QUERY]: paginationParams,
 };
 
 export const getUsersQuerySchema = {
-  [Segments.QUERY]: Joi.object({
-    page: Joi.number().integer().min(1).default(1),
-    perPage: Joi.number().integer().min(1).max(50).default(10),
-  }),
+  [Segments.QUERY]: paginationParams,
 };

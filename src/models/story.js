@@ -13,7 +13,6 @@ const storySchema = new Schema(
     },
     title: { type: String, required: true, trim: true },
     article: { type: String, required: true, trim: true },
-    rate: { type: Number, default: 0 },
     ownerId: {
       type: Schema.Types.ObjectId,
       ref: 'User',

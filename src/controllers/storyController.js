@@ -19,7 +19,7 @@ export const getStories = async (req, res) => {
     storyQuery
       .populate('categoryId')
       .populate('ownerId', 'name')
-      .sort({ rate: -1 })
+      .sort({ savedCount: -1 })
       .skip(skip)
       .limit(perPage),
   ]);

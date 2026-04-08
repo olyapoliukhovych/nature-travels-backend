@@ -12,7 +12,7 @@ const authRouter = Router();
 
 authRouter.post('/register', celebrate(registerSchema), registerUser);
 authRouter.post('/login', celebrate(loginSchema), loginUser);
-authRouter.post('/refresh', refreshSession);
+authRouter.get('/refresh', refreshSession);
 authRouter.post('/logout', logoutUser);
 
 export default authRouter;

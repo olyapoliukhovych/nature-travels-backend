@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import createHttpError from 'http-errors';
 import { User } from '../models/user.js';
 import { createSession, setSessionCookies } from '../services/auth.js';
+
 import { Session } from '../models/session.js';
 import { isValidObjectId } from 'mongoose';
 
@@ -62,10 +63,14 @@ export const logoutUser = async (req, res) => {
 };
 
 export const refreshSession = async (req, res) => {
+  const { refreshToken } = req.cookies;
+
+  console.log(req.cookies);
   const session = await Session.findOne({
-    _id: req.cookies.sessionId,
-    refreshToken: req.cookies.refreshToken,
+    refreshToken: refreshToken,
   });
+
+  console.log(session);
 
   if (!session) {
     throw createHttpError(401, 'Session not found');
@@ -76,7 +81,6 @@ export const refreshSession = async (req, res) => {
   }
 
   await Session.deleteOne({
-    _id: req.cookies.sessionId,
     refreshToken: req.cookies.refreshToken,
   });
 

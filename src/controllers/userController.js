@@ -12,7 +12,11 @@ export const getAllUsers = async (req, res) => {
   const skip = (page - 1) * perPage;
 
   const [users, totalItems] = await Promise.all([
-    User.find().skip(skip).limit(perPage),
+    User.find()
+      .select('-email')
+      .skip(skip)
+      .limit(perPage)
+      .sort({ totalUserStories: -1 }),
     User.countDocuments(),
   ]);
 
@@ -27,45 +31,26 @@ export const getAllUsers = async (req, res) => {
   });
 };
 
-export const getUserById = async (req, res) => {
+export const getUserByIdPublic = async (req, res) => {
   const { userId } = req.params;
-  // const { page = 1, perPage = 10 } = req.query;
-  // const skip = (page - 1) * perPage;
 
-  const user = await User.findById(userId);
-
-  if (!user) throw createHttpError(404, 'User not found');
-
-  // const storyQuery = Story.find().where('ownerId', userId);
-
-  // const [totalItems, stories] = await Promise.all([
-  //   storyQuery.clone().countDocuments(),
-  //   storyQuery.populate('categoryId').skip(skip).limit(perPage),
-  // ]);
-
-  // const totalPages = Math.ceil(totalItems / perPage);
-
-  res.status(200).json(user);
-};
-
-export const getCurrentUser = async (req, res) => {
-  const user = req.user;
+  const user = await User.findById(userId).select('-email');
 
   if (!user) throw createHttpError(404, 'User not found');
 
   res.status(200).json(user);
 };
 
-export const getMyStories = async (req, res) => {
+export const getUserStoriesPublic = async (req, res) => {
   const { page = 1, perPage = 10 } = req.query;
-  // const { userId } = req.params;
+  const { userId } = req.params;
+
   const skip = (page - 1) * perPage;
 
-  const storyQuery = Story.find({ ownerId: req.user._id });
-
   const [totalItems, stories] = await Promise.all([
-    storyQuery.clone().countDocuments(),
-    storyQuery
+    Story.find({ ownerId: userId }).countDocuments(),
+    Story.find({ ownerId: userId })
+      .sort({ savedCount: -1 })
       .populate('categoryId')
       .populate('ownerId', 'name')
       .skip(skip)
@@ -83,64 +68,44 @@ export const getMyStories = async (req, res) => {
   });
 };
 
-export const getSavedStories = async (req, res) => {
-  const { page = 1, perPage = 10 } = req.query;
-  const skip = (page - 1) * perPage;
+export const getUserProfile = async (req, res) => {
+  const user = req.user;
 
-  const user = await User.findById(req.user._id);
   if (!user) throw createHttpError(404, 'User not found');
 
-  const totalItems = user.savedStories.length;
-
-  const stories = await Story.find({
-    _id: { $in: user.savedStories },
-  })
-    .populate('categoryId')
-    .populate('ownerId', 'name')
-    .skip(skip)
-    .limit(perPage);
-
-  const totalPages = Math.ceil(totalItems / perPage);
-
-  res.status(200).json({
-    page,
-    perPage,
-    totalItems,
-    totalPages,
-    stories,
-  });
+  res.status(200).json(user);
 };
 
-export const saveStory = async (req, res) => {
+export const addStoryToFavorites = async (req, res) => {
   const { storyId } = req.params;
 
   const user = req.user;
 
-  const story = await Story.findById(storyId);
-
-  if (!story) throw createHttpError(404, 'Story not found');
-
-  if (!user) throw createHttpError(404, 'User not found');
-
-  const isArticleSaved = user.savedStories.some(
+  const isStorySaved = user.savedStories.some(
     (id) => id.toString() === storyId.toString(),
   );
-  if (isArticleSaved) {
+
+  if (isStorySaved) {
     return res.status(200).json({ message: 'Story already saved' });
   }
 
-  user.savedStories.push(storyId);
+  const [storyUpdated] = await Promise.all([
+    Story.findByIdAndUpdate(
+      storyId,
+      { $inc: { savedCount: 1 } },
+      { new: true },
+    ),
+    User.findByIdAndUpdate(user._id, { $addToSet: { savedStories: storyId } }),
+  ]);
 
-  await user.save();
-
-  story.savedCount += 1;
-
-  await story.save();
+  if (!storyUpdated) {
+    throw createHttpError(404, 'Story not found');
+  }
 
   res.status(200).json({ message: 'Story saved' });
 };
 
-export const unsaveStory = async (req, res) => {
+export const deleteStoryToFavorites = async (req, res) => {
   const { storyId } = req.params;
 
   const user = req.user;
@@ -164,6 +129,64 @@ export const unsaveStory = async (req, res) => {
   if (!storyUpdated) throw createHttpError(404, 'Story not found');
 
   res.status(200).json({ message: 'Story unsaved' });
+};
+
+export const getUserStoriesPrivate = async (req, res) => {
+  const { page = 1, perPage = 10 } = req.query;
+
+  const user = req.user;
+
+  const skip = (page - 1) * perPage;
+
+  const totalItems = user.userStories.length;
+
+  const stories = await Story.find({
+    _id: { $in: user.userStories },
+  })
+    .populate('categoryId')
+    .populate('ownerId', 'name')
+    .sort({ savedCount: -1 })
+    .skip(skip)
+    .limit(perPage);
+
+  const totalPages = Math.ceil(totalItems / perPage);
+
+  res.status(200).json({
+    page,
+    perPage,
+    totalItems,
+    totalPages,
+    stories,
+  });
+};
+
+export const getUserStoriesFavorites = async (req, res) => {
+  const { page = 1, perPage = 10 } = req.query;
+
+  const user = req.user;
+
+  const skip = (page - 1) * perPage;
+
+  const totalItems = user.savedStories.length;
+
+  const stories = await Story.find({
+    _id: { $in: user.savedStories },
+  })
+    .populate('categoryId')
+    .populate('ownerId', 'name')
+    .skip(skip)
+    .sort({ savedCount: -1 })
+    .limit(perPage);
+
+  const totalPages = Math.ceil(totalItems / perPage);
+
+  res.status(200).json({
+    page,
+    perPage,
+    totalItems,
+    totalPages,
+    stories,
+  });
 };
 
 // ! не задействовано

@@ -5,7 +5,7 @@ import { User } from '../models/user.js';
 import { saveStoryImgToCloudinary } from '../utils/saveFileToCloudinary.js';
 import { v2 as cloudinary } from 'cloudinary';
 
-export const getStories = async (req, res) => {
+export const getAllStories = async (req, res) => {
   const { page = 1, perPage = 10, categoryId } = req.query;
 
   const skip = (page - 1) * perPage;
@@ -33,6 +33,27 @@ export const getStories = async (req, res) => {
     totalPages,
     stories,
   });
+};
+
+export const getRecomendStories = async (req, res) => {
+  const { categoryId, storyId } = req.query;
+
+  const stories = await Story.find({
+    categoryId: categoryId,
+    _id: { $ne: storyId },
+  })
+    .populate('categoryId')
+    .populate('ownerId', 'name')
+    .sort({
+      savedCount: -1,
+    })
+    .limit(5);
+
+  if (stories.length === 0) {
+    throw createHttpError(404, 'Stories not found');
+  }
+
+  res.status(200).json(stories);
 };
 
 export const getStoryById = async (req, res) => {

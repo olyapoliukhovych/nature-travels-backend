@@ -2,13 +2,15 @@ import { Router } from 'express';
 import {
   createStory,
   getStoryById,
-  getStories,
+  getAllStories,
+  getRecomendStories,
 } from '../controllers/storyController.js';
 import { celebrate } from 'celebrate';
 import {
   storyIdParamSchema,
   createStorySchema,
   getStoriesSchema,
+  validationRecomendSchema,
 } from '../validation/storyValidation.js';
 import { authenticate } from '../middleware/authenticate.js';
 import { upload } from '../middleware/multer.js';
@@ -17,7 +19,13 @@ const router = Router();
 
 // general lists
 
-router.get('/', celebrate(getStoriesSchema), getStories);
+router.get('/', celebrate(getStoriesSchema), getAllStories);
+
+router.get(
+  '/recomend',
+  celebrate(validationRecomendSchema),
+  getRecomendStories,
+);
 
 router.get('/:storyId', celebrate(storyIdParamSchema), getStoryById);
 

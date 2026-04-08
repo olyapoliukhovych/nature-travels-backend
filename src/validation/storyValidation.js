@@ -40,6 +40,13 @@ export const storyIdParamSchema = {
   }),
 };
 
+export const validationRecomendSchema = {
+  [Segments.QUERY]: Joi.object({
+    storyId: Joi.string().custom(objectIdValidator).required(),
+    categoryId: Joi.string().custom(objectIdValidator).required(),
+  }),
+};
+
 export const updateStorySchema = {
   [Segments.BODY]: Joi.object({
     category: Joi.string().custom(objectIdValidator).messages({

@@ -3,13 +3,14 @@ import { authenticate } from '../middleware/authenticate.js';
 import {
   updateUserAvatar,
   verifyUserEmail,
-  getCurrentUser,
-  getUserById,
+  getUserProfile,
+  getUserByIdPublic,
+  getUserStoriesPublic,
   getAllUsers,
-  getMyStories,
-  getSavedStories,
-  saveStory,
-  unsaveStory,
+  getUserStoriesFavorites,
+  addStoryToFavorites,
+  getUserStoriesPrivate,
+  deleteStoryToFavorites,
 } from '../controllers/userController.js';
 import { upload } from '../middleware/multer.js';
 import {
@@ -27,30 +28,37 @@ const router = Router();
 
 router.get('/', celebrate(getUsersQuerySchema), getAllUsers);
 
-router.get('/me', authenticate, getCurrentUser);
+router.get('/me', authenticate, getUserProfile);
 
-router.get('/created', authenticate, celebrate(paginationSchema), getMyStories);
+router.get(
+  '/created',
+  authenticate,
+  celebrate(paginationSchema),
+  getUserStoriesPrivate,
+);
 
 router.get(
   '/saved',
   authenticate,
   celebrate(paginationSchema),
-  getSavedStories,
+  getUserStoriesFavorites,
 );
 
-router.get('/:userId', celebrate(userParamSchema), getUserById);
+router.get('/:userId', celebrate(userParamSchema), getUserByIdPublic);
+
+router.get('/:userId/public', celebrate(userParamSchema), getUserStoriesPublic);
 
 router.post(
   '/:storyId/save',
   authenticate,
   celebrate(storyIdParamSchema),
-  saveStory,
+  addStoryToFavorites,
 );
 router.delete(
   '/:storyId/save',
   authenticate,
   celebrate(storyIdParamSchema),
-  unsaveStory,
+  deleteStoryToFavorites,
 );
 
 // ! not use

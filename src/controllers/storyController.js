@@ -113,49 +113,83 @@ export const createStory = async (req, res) => {
   }
 };
 
-// !! updateStory не реализован на фронте
+export const updateStory = async (req, res) => {
+  try {
+    const { storyId } = req.params;
 
-// export const updateStory = async (req, res) => {
-//   const { storyId } = req.params;
+    const existingStory = await Story.findOne({
+      _id: storyId,
+      ownerId: req.user._id,
+    });
 
-//   if (req.body.category) {
-//     const categoryExists = await Category.findById(req.body.category);
-//     if (!categoryExists) {
-//       throw createHttpError(400, 'Category not found');
-//     }
-//   }
+    if (!existingStory) {
+      throw createHttpError(404, 'Story not found or you are not the owner');
+    }
 
-//   const story = await Story.findOneAndUpdate(
-//     { _id: storyId, ownerId: req.user._id },
-//     req.body,
-//     {
-//       returnDocument: 'after',
-//     },
-//   );
+    const updateData = {};
 
-//   if (!story) {
-//     throw createHttpError(404, 'Story not found');
-//   }
+    if (req.body.categoryId) updateData.categoryId = req.body.categoryId;
+    if (req.body.title) updateData.title = req.body.title;
+    if (req.body.article) updateData.article = req.body.article;
 
-//   res.status(200).json(story);
-// };
+    if (req.file) {
+      if (existingStory.img) {
+        const publicId = existingStory.img.split('/').pop().split('.')[0];
 
-// !! deleteStory по не реализован на фронте
+        await cloudinary.uploader.destroy(`nature-travels-app/img/${publicId}`);
+      }
 
-// export const deleteStory = async (req, res) => {
-//   const { storyId } = req.params;
-//   const story = await Story.findOneAndDelete({
-//     _id: storyId,
-//     ownerId: req.user._id,
-//   });
+      const result = await saveStoryImgToCloudinary(
+        req.file.buffer,
+        req.user._id,
+      );
 
-//   if (!story) {
-//     throw createHttpError(404, 'Story not found');
-//   }
-//   await User.updateMany(
-//     { savedStories: storyId },
-//     { $pull: { savedStories: storyId } },
-//   );
+      updateData.img = result.secure_url;
+    }
 
-//   res.status(200).json(story);
-// };
+    const updatedStory = await Story.findByIdAndUpdate(storyId, updateData, {
+      new: true,
+      runValidators: true,
+    }).populate('categoryId');
+
+    res.status(200).json(updatedStory);
+  } catch (error) {
+    console.error('UPDATE STORY ERROR:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const deleteStory = async (req, res) => {
+  const { storyId } = req.params;
+
+  const story = await Story.findOne({
+    _id: storyId,
+    ownerId: req.user._id,
+  });
+
+  if (!story) {
+    throw createHttpError(404, 'Story not found');
+  }
+
+  // видаляємо фото з cloudinary
+  if (story.img) {
+    const publicId = story.img.split('/').pop().split('.')[0];
+    await cloudinary.uploader.destroy(`nature-travels-app/img/${publicId}`);
+  }
+
+  await Story.findByIdAndDelete(storyId);
+
+  // видаляємо згадки у користувачів
+  await User.updateMany(
+    { savedStories: storyId },
+    { $pull: { savedStories: storyId } },
+  );
+
+  // зменшуємо лічильник власника
+  await User.findByIdAndUpdate(req.user._id, {
+    $pull: { userStories: storyId },
+    $inc: { totalUserStories: -1 },
+  });
+
+  res.status(200).json({ message: 'Story deleted successfully' });
+};

@@ -4,6 +4,8 @@ import {
   getStoryById,
   getAllStories,
   getRecomendStories,
+  updateStory,
+  deleteStory,
 } from '../controllers/storyController.js';
 import { celebrate } from 'celebrate';
 import {
@@ -11,13 +13,12 @@ import {
   createStorySchema,
   getStoriesSchema,
   validationRecomendSchema,
+  updateStorySchema,
 } from '../validation/storyValidation.js';
 import { authenticate } from '../middleware/authenticate.js';
 import { upload } from '../middleware/multer.js';
 
 const router = Router();
-
-// general lists
 
 router.get('/', celebrate(getStoriesSchema), getAllStories);
 
@@ -37,24 +38,19 @@ router.post(
   createStory,
 );
 
+router.patch(
+  '/:storyId',
+  authenticate,
+  upload.single('img'),
+  celebrate(updateStorySchema),
+  updateStory,
+);
+
+router.delete(
+  '/:storyId',
+  authenticate,
+  celebrate(storyIdParamSchema),
+  deleteStory,
+);
+
 export default router;
-
-// !! updateStory  не реализован на фронте
-
-// router.patch(
-//   '/:storyId',
-//   authenticate,
-//   celebrate(updateStorySchema),
-//   updateStory,
-// );
-
-// toggle save story
-
-// unnessery for now
-
-// router.delete(
-//   '/:storyId',
-//   authenticate,
-//   celebrate(storyIdParamSchema),
-//   deleteStory,
-// );

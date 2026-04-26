@@ -49,7 +49,7 @@ export const validationRecomendSchema = {
 
 export const updateStorySchema = {
   [Segments.BODY]: Joi.object({
-    category: Joi.string().custom(objectIdValidator).messages({
+    categoryId: Joi.string().custom(objectIdValidator).messages({
       'string.base': 'Category must be a string',
     }),
     title: Joi.string().min(3).messages({

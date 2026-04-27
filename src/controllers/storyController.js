@@ -97,10 +97,7 @@ export const createStory = async (req, res) => {
       $inc: { totalUserStories: 1 },
     });
 
-    return res.status(201).json({
-      message: 'Story created successfully',
-      success: true,
-    });
+    return res.status(201).json(story);
   } catch {
     if (imagePublicId) {
       await cloudinary.uploader.destroy(imagePublicId);

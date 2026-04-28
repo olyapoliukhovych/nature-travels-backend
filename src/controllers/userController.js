@@ -81,6 +81,16 @@ export const addStoryToFavorites = async (req, res) => {
 
   const user = req.user;
 
+  const story = await Story.findById(storyId);
+
+  if (!story) {
+    throw createHttpError(404, 'Story not found');
+  }
+
+  if (story.ownerId.toString() === user._id.toString()) {
+    throw createHttpError(400, 'You cannot save your own story');
+  }
+
   const isStorySaved = user.savedStories.some(
     (id) => id.toString() === storyId.toString(),
   );
@@ -89,18 +99,10 @@ export const addStoryToFavorites = async (req, res) => {
     return res.status(200).json({ message: 'Story already saved' });
   }
 
-  const [storyUpdated] = await Promise.all([
-    Story.findByIdAndUpdate(
-      storyId,
-      { $inc: { savedCount: 1 } },
-      { new: true },
-    ),
+  await Promise.all([
+    Story.findByIdAndUpdate(storyId, { $inc: { savedCount: 1 } }),
     User.findByIdAndUpdate(user._id, { $addToSet: { savedStories: storyId } }),
   ]);
-
-  if (!storyUpdated) {
-    throw createHttpError(404, 'Story not found');
-  }
 
   res.status(200).json({ message: 'Story saved' });
 };
@@ -116,17 +118,20 @@ export const deleteStoryToFavorites = async (req, res) => {
 
   if (!isStorySaved) throw createHttpError(404, "Story wasn't saved");
 
-  const [, storyUpdated] = await Promise.all([
+  const story = await Story.findById(storyId);
+
+  if (!story) {
+    throw createHttpError(404, 'Story not found');
+  }
+
+  await Promise.all([
     User.findByIdAndUpdate(user._id, {
       $pull: { savedStories: storyId },
     }),
-    Story.findOneAndUpdate(
-      { _id: storyId, savedCount: { $gt: 0 } },
-      { $inc: { savedCount: -1 } },
-    ),
+    Story.findByIdAndUpdate(storyId, {
+      $inc: { savedCount: -1 },
+    }),
   ]);
-
-  if (!storyUpdated) throw createHttpError(404, 'Story not found');
 
   res.status(200).json({ message: 'Story unsaved' });
 };

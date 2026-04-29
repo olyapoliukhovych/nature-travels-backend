@@ -21,14 +21,16 @@ export const createStorySchema = {
       'string.base': 'Category must be a string',
       'any.required': 'Category is required',
     }),
-    title: Joi.string().min(3).required().messages({
+    title: Joi.string().trim().min(3).max(100).required().messages({
       'string.base': 'Title must be a string',
       'string.min': 'Title should have at least {#limit} characters',
+      'string.max': 'Title should not exceed {#limit} characters',
       'any.required': 'Title is required',
     }),
-    article: Joi.string().min(3).required().messages({
+    article: Joi.string().trim().min(3).max(5000).required().messages({
       'string.base': 'Article must be a string',
       'string.min': 'Article should have at least {#limit} characters',
+      'string.max': 'Article should not exceed {#limit} characters',
       'any.required': 'Article is required',
     }),
   }),
@@ -52,13 +54,15 @@ export const updateStorySchema = {
     categoryId: Joi.string().custom(objectIdValidator).messages({
       'string.base': 'Category must be a string',
     }),
-    title: Joi.string().min(3).messages({
+    title: Joi.string().trim().min(3).max(100).messages({
       'string.base': 'Title must be a string',
       'string.min': 'Title should have at least {#limit} characters',
+      'string.max': 'Title should not exceed {#limit} characters',
     }),
-    article: Joi.string().min(3).messages({
+    article: Joi.string().trim().min(3).max(5000).messages({
       'string.base': 'Article must be a string',
       'string.min': 'Article should have at least {#limit} characters',
+      'string.max': 'Article should not exceed {#limit} characters',
     }),
   }).min(1),
 };

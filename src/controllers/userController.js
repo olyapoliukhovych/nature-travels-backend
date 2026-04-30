@@ -6,6 +6,7 @@ import { saveFileToCloudinary } from '../utils/saveFileToCloudinary.js';
 import { sendMail } from '../utils/sendMail.js';
 import { EMAIL_VERIFICATION_LIFETIME } from '../constants/time.js';
 import { Story } from '../models/story.js';
+import { Session } from '../models/session.js';
 
 export const getAllUsers = async (req, res) => {
   const { page = 1, perPage = 10 } = req.query;
@@ -73,7 +74,20 @@ export const getUserProfile = async (req, res) => {
 
   if (!user) throw createHttpError(404, 'User not found');
 
-  res.status(200).json(user);
+  const verification = await EmailVerification.findOne({
+    userId: user._id,
+    expiresAt: { $gt: new Date() },
+  });
+
+  const pendingEmail = verification?.newEmail || null;
+
+  const safeUser = user.toObject();
+  delete safeUser.password;
+
+  res.status(200).json({
+    ...safeUser,
+    pendingEmail,
+  });
 };
 
 export const addStoryToFavorites = async (req, res) => {
@@ -194,8 +208,6 @@ export const getUserStoriesFavorites = async (req, res) => {
   });
 };
 
-// ! не задействовано
-
 export const updateUserAvatar = async (req, res) => {
   if (!req.file) throw createHttpError(400, 'No file');
 
@@ -207,7 +219,9 @@ export const updateUserAvatar = async (req, res) => {
     { returnDocument: 'after' },
   );
 
-  res.status(200).json({ url: updatedUser.avatarUrl });
+  res.status(200).json({
+    avatarUrl: updatedUser.avatarUrl,
+  });
 };
 
 export const updateUser = async (req, res) => {
@@ -237,12 +251,16 @@ export const updateUser = async (req, res) => {
     const verifyLink = `${process.env.FRONTEND_DOMAIN}/verify?token=${token}`;
 
     await sendMail({
+      from: process.env.SMTP_FROM,
       to: email,
       subject: 'Verify your email',
       html: `<a href="${verifyLink}">Confirm email</a>`,
     });
 
-    return res.json({ message: 'Verification email sent' });
+    return res.json({
+      message: 'Verification email sent',
+      pendingEmail: email,
+    });
   }
 
   await user.save();
@@ -273,4 +291,20 @@ export const verifyUserEmail = async (req, res) => {
   await verification.deleteOne();
 
   res.status(200).json({ message: 'Email verified successfully' });
+};
+
+export const deleteUser = async (req, res) => {
+  const userId = req.user._id;
+
+  await Promise.all([
+    User.findByIdAndDelete(userId),
+    Story.deleteMany({ ownerId: userId }),
+    Session.deleteMany({ userId }),
+  ]);
+
+  res.clearCookie('sessionId');
+  res.clearCookie('accessToken');
+  res.clearCookie('refreshToken');
+
+  res.status(200).json({ message: 'User deleted' });
 };

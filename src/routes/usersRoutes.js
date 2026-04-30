@@ -2,7 +2,6 @@ import { Router } from 'express';
 import { authenticate } from '../middleware/authenticate.js';
 import {
   updateUserAvatar,
-  verifyUserEmail,
   getUserProfile,
   getUserByIdPublic,
   getUserStoriesPublic,
@@ -11,10 +10,14 @@ import {
   addStoryToFavorites,
   getUserStoriesPrivate,
   deleteStoryToFavorites,
+  updateUser,
+  deleteUser,
+  verifyUserEmail,
 } from '../controllers/userController.js';
 import { upload } from '../middleware/multer.js';
 import {
   getUsersQuerySchema,
+  updateUserSchema,
   userParamSchema,
   verifyTokenSchema,
 } from '../validation/updateUserValidation.js';
@@ -61,7 +64,7 @@ router.delete(
   deleteStoryToFavorites,
 );
 
-// ! not use
+router.patch('/me', authenticate, updateUserSchema, updateUser);
 
 router.patch(
   '/me/avatar',
@@ -69,6 +72,8 @@ router.patch(
   upload.single('avatar'),
   updateUserAvatar,
 );
+
+router.delete('/me', authenticate, deleteUser);
 
 // verification
 router.get('/verify/:token', celebrate(verifyTokenSchema), verifyUserEmail);

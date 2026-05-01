@@ -296,6 +296,28 @@ export const verifyUserEmail = async (req, res) => {
 export const deleteUser = async (req, res) => {
   const userId = req.user._id;
 
+  const user = await User.findById(userId);
+
+  // отримуємо всі історії користувача, щоб видалити посилання на них у інших користувачів
+  const userStories = await Story.find({ ownerId: userId }).select('_id');
+  const storyIds = userStories.map((story) => story._id);
+
+  // видаляємо посилання на історії у інших користувачів
+  if (storyIds.length > 0) {
+    await User.updateMany(
+      { savedStories: { $in: storyIds } },
+      { $pull: { savedStories: { $in: storyIds } } },
+    );
+  }
+
+  // зменшуємо savedCount для історій, які користувач мав збережені
+  if (user.savedStories && user.savedStories.length > 0) {
+    await Story.updateMany(
+      { _id: { $in: user.savedStories } },
+      { $inc: { savedCount: -1 } },
+    );
+  }
+
   await Promise.all([
     User.findByIdAndDelete(userId),
     Story.deleteMany({ ownerId: userId }),

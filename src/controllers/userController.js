@@ -51,7 +51,7 @@ export const getUserStoriesPublic = async (req, res) => {
   const [totalItems, stories] = await Promise.all([
     Story.find({ ownerId: userId }).countDocuments(),
     Story.find({ ownerId: userId })
-      .sort({ savedCount: -1 })
+      .sort({ savedCount: -1, _id: -1 })
       .populate('categoryId')
       .populate('ownerId', 'name')
       .skip(skip)

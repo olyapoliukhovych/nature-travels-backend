@@ -164,7 +164,7 @@ export const getUserStoriesPrivate = async (req, res) => {
   })
     .populate('categoryId')
     .populate('ownerId', 'name')
-    .sort({ savedCount: -1 })
+    .sort({ savedCount: -1, _id: -1 })
     .skip(skip)
     .limit(perPage);
 
@@ -194,7 +194,7 @@ export const getUserStoriesFavorites = async (req, res) => {
     .populate('categoryId')
     .populate('ownerId', 'name')
     .skip(skip)
-    .sort({ savedCount: -1 })
+    .sort({ savedCount: -1, _id: -1 })
     .limit(perPage);
 
   const totalPages = Math.ceil(totalItems / perPage);

@@ -854,6 +854,78 @@ export const swaggerSpec = {
           },
         },
       },
+      patch: {
+        tags: ['Stories'],
+        summary: 'Оновити story',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ $ref: '#/components/parameters/StoryIdParam' }],
+        requestBody: {
+          required: true,
+          content: {
+            'multipart/form-data': {
+              schema: { $ref: '#/components/schemas/StoryCreateRequest' },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'Story успішно оновлено',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Story' },
+              },
+            },
+          },
+          401: {
+            description: 'Неавторизовано',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+          404: {
+            description: 'Story not found',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
+      delete: {
+        tags: ['Stories'],
+        summary: 'Видалити story',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ $ref: '#/components/parameters/StoryIdParam' }],
+        responses: {
+          200: {
+            description: 'Story успішно видалено',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/MessageResponse' },
+              },
+            },
+          },
+          401: {
+            description: 'Неавторизовано',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+          404: {
+            description: 'Story not found',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
     },
     '/stories/{storyId}/save': {
       post: {
@@ -1035,6 +1107,29 @@ export const swaggerSpec = {
                 schema: {
                   $ref: '#/components/schemas/ErrorResponse',
                 },
+              },
+            },
+          },
+        },
+      },
+      delete: {
+        tags: ['Users'],
+        summary: 'Видалити акаунт поточного користувача',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: 'Акаунт успішно видалено',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/MessageResponse' },
+              },
+            },
+          },
+          401: {
+            description: 'Неавторизовано',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
               },
             },
           },
